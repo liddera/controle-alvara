@@ -36,7 +36,7 @@
                         <span x-show="sidebarOpen" x-cloak class="ml-3">Empresas</span>
                     </a>
                     
-                    <a href="#" class="flex items-center px-4 py-2 rounded-md font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white" :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Alvarás">
+                    <a href="{{ route('alvaras.index') }}" class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('alvaras.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}" :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Alvarás">
                         <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         <span x-show="sidebarOpen" x-cloak class="ml-3">Alvarás</span>
                     </a>

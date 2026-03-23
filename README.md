@@ -1,59 +1,85 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🚀 Alvras - Sistema de Controle de Alvarás
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+O **Alvras** é uma plataforma robusta desenvolvida em Laravel para gerenciar empresas e seus respectivos alvarás, focando em controle de vencimentos, notificações e armazenamento de documentos.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🛠️ Stack Tecnológica
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Backend:** PHP 8.2+ / [Laravel 12](https://laravel.com)
+- **Frontend:** Blade, TailwindCSS, Alpine.js (Breeze Starter Kit)
+- **Banco de Dados:** PostgreSQL
+- **Integrações:** Sanctum (API Auth), Storage (Local/S3)
+- **Assets:** Vite
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 📦 Módulos Implementados
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 🏢 Empresas
+- CRUD completo via Web e API.
+- Dashboard com estatísticas por empresa.
+- Relacionamento 1:N com Alvarás.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 📜 Alvarás
+- CRUD completo com seleção de empresa.
+- **Gerenciamento de Documentos:** Upload de múltiplos arquivos (PDF, PNG, JPG) com exclusão e visualização.
+- **Cálculo de Status Automático:** 
+  - `✔ Ativo`: Vencimento > 30 dias.
+  - `⚠ Em Renovação`: Vencimento em até 30 dias.
+  - `❌ Vencido`: Data de vencimento ultrapassada.
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## ⚓ API (Sanctum)
 
-### Premium Partners
+As rotas da API estão protegidas e prefixadas para evitar conflitos com a Web:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- `GET /api/empresas` (Nomes de rota: `api.empresas.index`)
+- `GET /api/alvaras` (Nomes de rota: `api.alvaras.index`)
 
-## Contributing
+**Exemplo de autenticação:**
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" http://127.0.0.1:8000/api/empresas
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🚀 Como Rodar o Projeto
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. **Instalar Dependências:**
+```bash
+composer install
+npm install && npm run build
+```
 
-## Security Vulnerabilities
+2. **Configuração do Ambiente:**
+Copie o `.env.example` para `.env` e configure seu banco PostgreSQL.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+3. **Migrations e Seeders (Dados de Teste):**
+```bash
+php artisan migrate:fresh --seed
+php artisan storage:link
+```
 
-## License
+4. **Inicie o Servidor:**
+```bash
+php artisan serve
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 🔑 Acesso Padrão (Seeder)
+
+- **Usuário:** `admin@alvras.com`
+- **Senha:** `password`
+
+---
+
+## 📂 Estrutura de Pastas de Negócio
+- `app/Http/Controllers`: Controllers Web e API.
+- `app/Actions`: Lógica de negócio isolada (Ex: `CriarAlvaraAction`).
+- `app/Services`: Serviços compartilhados.
+- `app/DTOs`: Objetos de transferência de dados.
+- `resources/views`: Templates Blade para Empresas e Alvarás.
+

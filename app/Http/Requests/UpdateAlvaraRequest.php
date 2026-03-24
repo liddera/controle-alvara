@@ -21,6 +21,7 @@ class UpdateAlvaraRequest extends FormRequest
             'numero' => ['nullable', 'string', 'max:255'],
             'data_emissao' => ['nullable', 'date'],
             'data_vencimento' => ['required', 'date'],
+            'status' => ['required', 'string', 'in:vigente,proximo,vencido'],
             'observacoes' => ['nullable', 'string'],
         ];
     }

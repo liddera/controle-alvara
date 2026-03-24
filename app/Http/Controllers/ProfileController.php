@@ -79,7 +79,7 @@ class ProfileController extends Controller
 
         $token = $request->user()->createToken($request->token_name);
 
-        return Redirect::route('profile.edit')->with('status', 'token-created')->with('plainTextToken', $token->plainTextToken);
+        return Redirect::route('profile.tokens')->with('status', 'token-created')->with('plainTextToken', $token->plainTextToken);
     }
 
     /**
@@ -89,6 +89,6 @@ class ProfileController extends Controller
     {
         $request->user()->tokens()->where('id', $tokenId)->delete();
 
-        return Redirect::route('profile.edit')->with('status', 'token-deleted');
+        return Redirect::route('profile.tokens')->with('status', 'token-deleted');
     }
 }

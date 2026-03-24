@@ -9,26 +9,26 @@ class AlvaraService
 {
     public function criar(AlvaraDTO $dto): Alvara
     {
-        $status = $this->calcularStatus($dto->data_vencimento);
-
-        $alvara = Alvara::create([
-            ...$dto->toArray(),
-            'status' => $status,
-        ]);
-
-        // Aqui poderíamos disparar: event(new AlvaraCriado($alvara));
+        $data = $dto->toArray();
         
-        return $alvara;
+        // Se tipo estiver vazio, busca do relacionamento para manter consistência legacy
+        if (empty($data['tipo']) && !empty($data['tipo_alvara_id'])) {
+            $data['tipo'] = \App\Models\TipoAlvara::find($data['tipo_alvara_id'])?->nome;
+        }
+
+        return Alvara::create($data);
     }
 
     public function atualizar(Alvara $alvara, AlvaraDTO $dto): Alvara
     {
-        $status = $this->calcularStatus($dto->data_vencimento);
+        $data = $dto->toArray();
 
-        $alvara->update([
-            ...$dto->toArray(),
-            'status' => $status,
-        ]);
+        // Se tipo estiver vazio, busca do relacionamento
+        if (empty($data['tipo']) && !empty($data['tipo_alvara_id'])) {
+            $data['tipo'] = \App\Models\TipoAlvara::find($data['tipo_alvara_id'])?->nome;
+        }
+
+        $alvara->update($data);
 
         return $alvara;
     }

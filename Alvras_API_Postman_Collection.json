@@ -1,0 +1,278 @@
+{
+	"info": {
+		"_postman_id": "8b3f6b2c-6d1a-4e2b-9a8c-7f9a8b7c6d5e",
+		"name": "Alvras API Suite",
+		"description": "Collection completa para testes da API do sistema Alvras (Empresas e Alvarás). Inclui autenticação via Sanctum.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Autenticação",
+			"item": [
+				{
+					"name": "Login (Gerar Token)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@alvras.com.br\",\n    \"password\": \"password\",\n    \"device_name\": \"Postman\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "Endpoint para autenticação. Retorna um 'token' que deve ser usado como Bearer Token nas demais rotas."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Meu Perfil",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/user",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Empresas",
+			"item": [
+				{
+					"name": "Listar Empresas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/empresas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"empresas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Empresa",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nome\": \"Nova Empresa Postman\",\n    \"razao_social\": \"Postman Testing LTDA\",\n    \"cnpj\": \"12.345.678/0001-90\",\n    \"email\": \"contato@postman.com\",\n    \"telefone\": \"(11) 99999-9999\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/empresas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"empresas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ver Detalhes Empresa",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/empresas/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"empresas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Alvarás",
+			"item": [
+				{
+					"name": "Listar Alvarás",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/alvaras?status=vigente",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alvaras"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "vigente"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Alvará",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"empresa_id\": 1,\n    \"tipo_alvara_id\": 1,\n    \"numero\": \"ALV-POST-01\",\n    \"data_vencimento\": \"2026-12-31\",\n    \"status\": \"vigente\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/alvaras",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alvaras"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{bearerToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://127.0.0.1:8001/api",
+			"type": "string"
+		},
+		{
+			"key": "bearerToken",
+			"value": "8|ExTX0ywoNd3JjIsI9H35wATVggFMKIGAnYllx5TGbbe82230",
+			"type": "string"
+		}
+	]
+}

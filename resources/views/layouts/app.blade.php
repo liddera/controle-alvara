@@ -26,7 +26,7 @@
 
         <!-- Sidebar -->
         <aside :class="sidebarOpen ? 'w-64' : 'w-20'"
-            class="transition-all duration-300 bg-gray-900 text-white flex-shrink-0 flex flex-col min-h-screen shadow-lg z-20">
+            class="transition-all duration-300 bg-gray-900 text-white flex-shrink-0 flex flex-col h-screen sticky top-0 shadow-lg z-20 border-r border-gray-800 overflow-y-auto">
             <div class="p-4 border-b border-gray-800 flex items-center justify-center min-h-[80px]">
                 <img x-show="sidebarOpen" src="{{ asset('logo.png') }}" alt="GEA Logo" class="h-16 w-auto">
                 <img x-show="!sidebarOpen" x-cloak src="{{ asset('logo.png') }}" alt="GEA" class="h-12 w-auto">
@@ -118,7 +118,7 @@
                 </a>
 
                 @role('owner')
-                <div x-data="{ open: {{ request()->routeIs('profile.tokens') ? 'true' : 'false' }} }">
+                <div x-data="{ open: {{ request()->routeIs('profile.tokens') || request()->routeIs('profile.alerts') ? 'true' : 'false' }} }">
                     <button @click="open = !open"
                         class="w-full flex items-center px-4 py-2 rounded-md font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white"
                         :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Configurações">
@@ -141,6 +141,10 @@
                         <a href="{{ route('profile.tokens') }}"
                             class="block px-4 py-2 text-sm {{ request()->routeIs('profile.tokens') ? 'text-white font-bold' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} rounded-md">
                             Tokens de API
+                        </a>
+                        <a href="{{ route('profile.alerts') }}"
+                            class="block px-4 py-2 text-sm {{ request()->routeIs('profile.alerts') ? 'text-white font-bold' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} rounded-md">
+                            Alertas de Vencimento
                         </a>
                         <span class="block px-4 py-2 text-sm text-gray-600 cursor-not-allowed">
                             Personalização (Em breve)

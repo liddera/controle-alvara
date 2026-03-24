@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Traits\HasOwner;
 
+use App\Traits\Auditable;
+
 class Empresa extends Model
 {
-    use HasFactory, HasOwner;
+    use HasFactory, Auditable, HasOwner;
     protected $fillable = [
         'user_id',
         'owner_id',

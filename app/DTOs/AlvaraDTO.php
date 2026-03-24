@@ -14,6 +14,7 @@ class AlvaraDTO
         public ?string $numero,
         public ?string $data_emissao,
         public string $data_vencimento,
+        public string $status,
         public ?string $observacoes,
     ) {}
 
@@ -27,6 +28,7 @@ class AlvaraDTO
             numero: $request->validated('numero'),
             data_emissao: $request->validated('data_emissao'),
             data_vencimento: $request->validated('data_vencimento'),
+            status: $request->validated('status'),
             observacoes: $request->validated('observacoes'),
         );
     }
@@ -41,6 +43,7 @@ class AlvaraDTO
             'numero' => $this->numero,
             'data_emissao' => $this->data_emissao,
             'data_vencimento' => $this->data_vencimento,
+            'status' => $this->status,
             'observacoes' => $this->observacoes,
         ];
     }

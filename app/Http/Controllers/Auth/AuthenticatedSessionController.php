@@ -29,6 +29,27 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+        
+        // Registrar último login e evento de auditoria
+        $user->update([
+            'last_login_at' => now(),
+        ]);
+        
+        // Evento manual de auditoria
+        \App\Models\AuditLog::create([
+            'user_id' => $user->id,
+            'event' => 'login',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'url' => $request->fullUrl(),
+        ]);
+
+        if (!$user->is_active) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('login')->with('error', 'Sua conta está desativada.');
+        }
 
         if ($user->hasRole('super-admin')) {
             return redirect()->intended('/admin');
@@ -42,6 +63,17 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+        if ($user) {
+            \App\Models\AuditLog::create([
+                'user_id' => $user->id,
+                'event' => 'logout',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'url' => $request->fullUrl(),
+            ]);
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

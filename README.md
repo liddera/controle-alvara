@@ -29,6 +29,12 @@ O **Alvras** é uma plataforma robusta desenvolvida em Laravel para gerenciar em
   - `⚠ Em Renovação`: Vencimento em até 30 dias.
   - `❌ Vencido`: Data de vencimento ultrapassada.
 
+### 🔔 Notificações Automáticas
+- **Configuração Customizada:** Usuários definem quantos dias de antecedência desejam ser avisados por tipo de alvará (Ex: Bombeiro 40 dias antes, Sanitário 15 dias).
+- **Multicanal:** Alertas chegam via **E-mail** e através do **Sino de Notificações** no painel.
+- **Interatividade:** Clique no alerta para ser redirecionado diretamente ao alvará pendente.
+- **Automação Total:** Processamento diário via Scheduler e disparos assíncronos via Filas (Queues).
+
 ---
 
 ## ⚓ API (Sanctum)
@@ -65,6 +71,19 @@ php artisan storage:link
 4. **Inicie o Servidor:**
 ```bash
 php artisan serve
+```
+
+5. **Automação de Notificações (Desenvolvimento):**
+Para testar os alertas e e-mails localmente:
+```bash
+# Processar alertas manualmente
+php artisan alerts:process
+
+# Rodar a fila de e-mails (mantenha aberto)
+php artisan queue:work
+
+# Simular o agendador (opcional)
+php artisan schedule:work
 ```
 
 ---

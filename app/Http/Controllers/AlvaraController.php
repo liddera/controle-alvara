@@ -28,7 +28,7 @@ class AlvaraController extends Controller
                 $q->whereHas('tipoAlvara', fn ($query) => $query->where('slug', $tipo_slug));
             })
             ->latest()
-            ->paginate(15);
+            ->paginate(10);
 
         $empresas = Empresa::all();
         $tiposAlvara = \App\Models\TipoAlvara::all();

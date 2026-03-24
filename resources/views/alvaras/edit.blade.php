@@ -54,6 +54,18 @@
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Status do Alvará <span class="text-red-500">*</span></label>
+                            <select name="status" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 @error('status') border-red-500 @enderror">
+                                <option value="vigente" @selected(old('status', $alvara->status) == 'vigente')>✔ Ativo</option>
+                                <option value="proximo" @selected(old('status', $alvara->status) == 'proximo')>⚠ Renovação</option>
+                                <option value="vencido" @selected(old('status', $alvara->status) == 'vencido')>❌ Vencido</option>
+                            </select>
+                            @error('status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Observações</label>
                         <textarea name="observacoes" rows="3" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500">{{ old('observacoes', $alvara->observacoes) }}</textarea>

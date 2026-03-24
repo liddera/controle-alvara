@@ -2,25 +2,29 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\HasOwner;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AlertConfig extends Model
 {
-    use HasFactory;
+    use HasOwner;
+
     protected $fillable = [
+        'owner_id',
         'user_id',
-        'dias_antes',
-        'tipo',
-        'ativo',
+        'tipo_alvara_id',
+        'days_before',
+        'is_active',
     ];
 
-    protected $casts = [
-        'ativo' => 'boolean',
-    ];
-
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function tipoAlvara(): BelongsTo
+    {
+        return $this->belongsTo(TipoAlvara::class);
     }
 }

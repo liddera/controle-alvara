@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
 use App\Traits\HasOwner;
+use App\DTOs\AlvaraFilterDTO;
+use App\Traits\Auditable;
 
 class Alvara extends Model
 {
-    use HasFactory, HasOwner;
+    use HasFactory, Auditable, HasOwner;
     protected $fillable = [
         'empresa_id',
         'user_id',
@@ -71,5 +72,15 @@ class Alvara extends Model
     public function scopeVencido($query)
     {
         return $query->where('status', 'vencido');
+    }
+
+    /**
+     * Scope a query to filter alvaras based on a DTO.
+     */
+    public function scopeFilterByDto($query, AlvaraFilterDTO $dto)
+    {
+        return $query->when($dto->empresa_id, fn($q) => $q->where('empresa_id', $dto->empresa_id))
+            ->when($dto->search, fn($q) => $q->where('tipo', 'like', '%' . $dto->search . '%'))
+            ->when($dto->status && $dto->status !== 'todos', fn($q) => $q->where('status', $dto->status));
     }
 }

@@ -2,39 +2,41 @@
 
 namespace App\Notifications;
 
+use App\Models\Alvara;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class VencimentoAlvaraNotification extends Notification
-{
-    use Queueable;
+use Illuminate\Queue\SerializesModels;
 
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct(protected \App\Models\Alvara $alvara)
-    {
-        //
-    }
+class VencimentoAlvaraNotification extends Notification implements ShouldQueue
+{
+    use Queueable, SerializesModels;
+
+    public function __construct(
+        public Alvara $alvara,
+        public int $daysBefore
+    ) {}
 
     public function via(object $notifiable): array
     {
         return ['mail', 'database'];
     }
 
-    public function toMail(object $notifiable): \Illuminate\Notifications\Messages\MailMessage
+    public function toMail(object $notifiable): MailMessage
     {
-        return (new \Illuminate\Notifications\Messages\MailMessage)
-                    ->subject('⚠️ Alerta de Vencimento: ' . $this->alvara->tipo)
-                    ->greeting('Olá, ' . $notifiable->name)
-                    ->line('Este é um lembrete automático de que um alvará está próximo ao vencimento.')
-                    ->line('**Empresa:** ' . $this->alvara->empresa->nome)
-                    ->line('**Tipo de Alvará:** ' . $this->alvara->tipo)
-                    ->line('**Data de Vencimento:** ' . $this->alvara->data_vencimento->format('d/m/Y'))
-                    ->action('Visualizar Alvará', route('alvaras.show', $this->alvara))
-                    ->line('Recomendamos iniciar o processo de renovação para evitar multas ou interrupções.');
+        $statusLabel = $this->daysBefore > 0 
+            ? "vencerá em {$this->daysBefore} dias" 
+            : "vence HOJE";
+
+        return (new MailMessage)
+            ->subject("Alerta de Vencimento: {$this->alvara->tipo}")
+            ->greeting("Olá, {$notifiable->name}!")
+            ->line("Este é um aviso automático de que o alvará **{$this->alvara->numero}** ({$this->alvara->tipo}) da empresa **{$this->alvara->empresa->nome}** {$statusLabel}.")
+            ->line("Data de Vencimento: **{$this->alvara->data_vencimento->format('d/m/Y')}**")
+            ->action('Ver Alvará no Painel', route('alvaras.show', $this->alvara))
+            ->line('Recomendamos iniciar o processo de renovação o quanto antes para evitar multas ou interrupções.');
     }
 
     public function toArray(object $notifiable): array
@@ -43,8 +45,10 @@ class VencimentoAlvaraNotification extends Notification
             'alvara_id' => $this->alvara->id,
             'empresa_nome' => $this->alvara->empresa->nome,
             'tipo' => $this->alvara->tipo,
-            'data_vencimento' => $this->alvara->data_vencimento->toDateString(),
-            'message' => 'Alvará Próximo ao Vencimento',
+            'numero' => $this->alvara->numero,
+            'data_vencimento' => $this->alvara->data_vencimento->format('Y-m-d'),
+            'days_before' => $this->daysBefore,
+            'message' => "O alvará {$this->alvara->numero} vence em {$this->daysBefore} dias.",
         ];
     }
 }

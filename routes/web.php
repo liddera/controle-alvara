@@ -11,6 +11,7 @@ Route::get('/', fn () => redirect()->route('dashboard'));
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/export', [DashboardController::class, 'export'])->name('dashboard.export');
     Route::resource('empresas', EmpresaController::class);
     Route::resource('alvaras', AlvaraController::class);
     Route::resource('users', \App\Http\Controllers\UserController::class)->middleware('plan.limit');
@@ -26,6 +27,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/tokens', [ProfileController::class, 'tokens'])->name('profile.tokens');
     Route::post('/profile/tokens', [ProfileController::class, 'storeToken'])->name('profile.tokens.store');
     Route::delete('/profile/tokens/{tokenId}', [ProfileController::class, 'destroyToken'])->name('profile.tokens.destroy');
+
+    // Alert Settings Management
+    Route::get('/profile/alerts', [\App\Http\Controllers\AlertSettingsController::class, 'index'])->name('profile.alerts');
+    Route::post('/profile/alerts', [\App\Http\Controllers\AlertSettingsController::class, 'store'])->name('profile.alerts.store');
+    Route::delete('/profile/alerts/{config}', [\App\Http\Controllers\AlertSettingsController::class, 'destroy'])->name('profile.alerts.destroy');
+
+    // Mark Notifications as Read
+    Route::post('/notifications/mark-as-read', function() {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back();
+    })->name('notifications.mark-as-read');
+
+    Route::get('/notifications/{notification}/read', [\App\Http\Controllers\AlertSettingsController::class, 'readAndRedirect'])->name('notifications.read');
 });
 
 // Admin Routes (SaaS) are now handled by Filament at /admin

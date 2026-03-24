@@ -12,9 +12,12 @@ use Spatie\Permission\Traits\HasRoles;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Auditable;
+
 class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes, Auditable;
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -31,6 +34,9 @@ class User extends Authenticatable implements FilamentUser
         'plan_id',
         'parent_id',
         'owner_id',
+        'is_active',
+        'deactivated_at',
+        'last_login_at',
     ];
 
     protected $hidden = [
@@ -45,7 +51,15 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'deactivated_at' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
+    }
+
+    public function auditLogs()
+    {
+        return $this->hasMany(AuditLog::class);
     }
 
     public function empresas()

@@ -1,15 +1,20 @@
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <img src="{{ asset('logo.png') }}" alt="Logo" class="block h-14 w-auto">
-                    </a>
-                </div>
+        <div class="flex justify-between items-center h-16 relative">
+
+            <!-- Espaço vazio à esquerda -->
+            <div class="w-1/3"></div>
+
+            <!-- 🔥 LOGO CENTRALIZADA -->
+            <div class="absolute left-1/2 transform -translate-x-1/2">
+                <a href="{{ route('dashboard') }}">
+                    <img src="{{ asset('GEAlogo-Photoroom.png') }}" alt="Logo"
+                        class="block h-16 w-auto transition hover:scale-105">
+                </a>
             </div>
 
-            <div class="hidden sm:flex sm:items-center sm:ms-6 gap-4">
+            <!-- Direita: notificações + usuário -->
+            <div class="hidden sm:flex sm:items-center sm:ms-6 gap-4 ml-auto">
 
                 <!-- 🔔 NOTIFICAÇÕES -->
                 <x-dropdown align="right" width="128">
@@ -17,7 +22,6 @@
                         <button
                             class="relative p-2 text-gray-500 hover:text-amber-500 transition transform hover:scale-105">
 
-                            <!-- 🔔 ÍCONE COM FUNDO -->
                             <div
                                 class="w-9 h-9 flex items-center justify-center rounded-full bg-amber-100 border border-amber-200">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +64,6 @@
 
                                 <div class="flex items-start gap-3">
 
-                                    <!-- 🔴 ÍCONE MENOR -->
                                     <div class="flex-shrink-0">
                                         <div
                                             class="w-7 h-7 bg-red-100 rounded-full flex items-center justify-center border border-red-200">
@@ -77,8 +80,6 @@
 
                                     <div class="flex-1 min-w-0">
                                         <div class="flex justify-between items-start mb-1">
-
-                                            <!-- 🔴 TÍTULO EM VERMELHO -->
                                             <p class="text-sm font-semibold text-red-600 leading-tight">
                                                 Alerta de Vencimento
                                             </p>
@@ -111,14 +112,16 @@
                 <!-- 👤 USER -->
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <!-- Botão Pílula c/ Avatar Circular -->
-                        <button class="inline-flex items-center gap-2 px-1 py-1 pr-3 border border-gray-200 rounded-full bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition ease-in-out duration-150 shadow-sm ml-2">
+                        <button
+                            class="inline-flex items-center gap-2 px-1 py-1 pr-3 border border-gray-200 rounded-full bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition ease-in-out duration-150 shadow-sm ml-2">
                             @php
-                                $nameParts = explode(' ', Auth::user()->name);
-                                $initials = substr($nameParts[0], 0, 1) . (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : '');
+                            $nameParts = explode(' ', Auth::user()->name);
+                            $initials = substr($nameParts[0], 0, 1) . (isset($nameParts[1]) ? substr($nameParts[1], 0,
+                            1) : '');
                             @endphp
-                            
-                            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800 text-gray-200 font-bold text-xs uppercase shadow-inner">
+
+                            <div
+                                class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800 text-gray-200 font-bold text-xs uppercase shadow-inner">
                                 {{ $initials }}
                             </div>
 
@@ -126,30 +129,31 @@
                                 {{ Auth::user()->name }}
                             </div>
 
-                            <svg class="w-4 h-4 text-gray-400 ms-1 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            <svg class="w-4 h-4 text-gray-400 ms-1 mr-1" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
                     </x-slot>
 
                     <x-slot name="content">
-                        <!-- Informações do plano ou cargo (Opcional - bônus visual) -->
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 rounded-t-md">
                             <p class="text-xs text-gray-500">Logado como</p>
                             <p class="text-sm font-semibold truncate text-gray-800">{{ Auth::user()->email }}</p>
                         </div>
 
-                        <!-- Menu Itens -->
                         <x-dropdown-link :href="route('profile.edit')">
                             <div class="flex items-center gap-2 font-medium">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                 </svg>
                                 Meu Perfil
                             </div>
                         </x-dropdown-link>
 
-                        <!-- Divider Interno -->
                         <div class="border-t border-gray-100 my-1"></div>
 
                         <form method="POST" action="{{ route('logout') }}">
@@ -158,7 +162,9 @@
                                 onclick="event.preventDefault(); this.closest('form').submit();">
                                 <div class="flex items-center gap-2 font-medium text-red-600 hover:text-red-700">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                        </path>
                                     </svg>
                                     Sair do Sistema
                                 </div>

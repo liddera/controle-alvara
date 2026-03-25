@@ -27,11 +27,16 @@
         <!-- Sidebar -->
         <aside :class="sidebarOpen ? 'w-64' : 'w-20'"
             class="transition-all duration-300 bg-gray-900 text-white flex-shrink-0 flex flex-col h-screen sticky top-0 shadow-lg z-20 border-r border-gray-800 overflow-y-auto">
-            <div class="p-4 border-b border-gray-800 flex items-center justify-center min-h-[80px]">
-                <img x-show="sidebarOpen" src="{{ asset('logo.png') }}" alt="GEA Logo" class="h-16 w-auto">
-                <img x-show="!sidebarOpen" x-cloak src="{{ asset('logo.png') }}" alt="GEA" class="h-12 w-auto">
-            </div>
+            <div class="p-4 border-b border-gray-800 flex items-center justify-center min-h-[90px]">
 
+                <!-- Logo grande (sidebar aberto) -->
+                <img x-show="sidebarOpen" src="{{ asset('GEAlogo-Photoroom.png') }}" alt="GEA Logo"
+                    class="h-20 w-auto transition-all duration-300 hover:scale-105 drop-shadow-[0_0_12px_rgba(255,255,255,0.35)] brightness-125 contrast-125">
+
+                <!-- Logo pequena (sidebar fechado) -->
+                <img x-show="!sidebarOpen" x-cloak src="{{ asset('GEAlogo-Photoroom.png') }}" alt="GEA"
+                    class="h-12 w-auto transition-all duration-300 hover:scale-110 opacity-95 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] brightness-125 contrast-125">
+            </div>
             <nav class="flex-1 py-6 px-3 space-y-2">
                 <a href="{{ route('dashboard') }}"
                     class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('dashboard') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}"
@@ -118,7 +123,8 @@
                 </a>
 
                 @role('owner')
-                <div x-data="{ open: {{ request()->routeIs('profile.tokens') || request()->routeIs('profile.alerts') ? 'true' : 'false' }} }">
+                <div
+                    x-data="{ open: {{ request()->routeIs('profile.tokens') || request()->routeIs('profile.alerts') ? 'true' : 'false' }} }">
                     <button @click="open = !open"
                         class="w-full flex items-center px-4 py-2 rounded-md font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white"
                         :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Configurações">

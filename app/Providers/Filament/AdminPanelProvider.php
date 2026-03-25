@@ -37,10 +37,12 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
                 \App\Filament\Widgets\StatsOverview::class,
-                \App\Filament\Widgets\AlvarasStatusChart::class,
             ])
+            ->renderHook(
+                'panels::head.end',
+                fn (): string => '<link rel="stylesheet" href="' . asset('css/filament-sidebar.css') . '">'
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

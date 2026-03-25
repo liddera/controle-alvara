@@ -1,0 +1,39 @@
+/* public/css/filament-sidebar.css */
+/* Força a sidebar do Filament a ter o mesmo estilo do painel de clientes (modo escuro permanente e destacado) */
+
+.fi-sidebar {
+    background-color: #111827 !important; /* bg-gray-900 */
+    border-right-color: #1f2937 !important; /* border-gray-800 */
+}
+
+/* Textos e ícones inativos */
+.fi-sidebar-item-label, 
+.fi-sidebar-item-icon,
+.fi-sidebar-group-label {
+    color: #9ca3af !important; /* text-gray-400 */
+}
+
+/* Hover (quando passa o mouse) */
+.fi-sidebar-item-button:hover {
+    background-color: #1f2937 !important; /* hover:bg-gray-800 */
+}
+
+.fi-sidebar-item-button:hover .fi-sidebar-item-label,
+.fi-sidebar-item-button:hover .fi-sidebar-item-icon {
+    color: #ffffff !important; /* hover:text-white */
+}
+
+/* Estado Ativo (página atual) */
+.fi-sidebar-item-active > .fi-sidebar-item-button {
+    background-color: #1f2937 !important; /* bg-gray-800 */
+}
+
+.fi-sidebar-item-active > .fi-sidebar-item-button .fi-sidebar-item-label,
+.fi-sidebar-item-active > .fi-sidebar-item-button .fi-sidebar-item-icon {
+    color: #ffffff !important; /* text-white */
+}
+
+/* Cabeçalho da Sidebar (área da logo) */
+.fi-sidebar-header {
+    background-color: #111827 !important;
+}

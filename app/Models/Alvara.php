@@ -59,19 +59,41 @@ class Alvara extends Model
         return $this->belongsTo(TipoAlvara::class, 'tipo_alvara_id');
     }
 
+    protected function status(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: function ($value) {
+                if (!$this->data_vencimento) {
+                    return $value;
+                }
+                
+                $hoje = now()->startOfDay();
+                $vencimento = \Carbon\Carbon::parse($this->data_vencimento)->startOfDay();
+                $dias = $hoje->diffInDays($vencimento, false);
+
+                if ($dias < 0) return 'vencido';
+                if ($dias <= 30) return 'proximo';
+                return 'vigente';
+            }
+        );
+    }
+
     public function scopeVigente($query)
     {
-        return $query->where('status', 'vigente');
+        $limite = now()->addDays(30)->endOfDay();
+        return $query->whereNotNull('data_vencimento')->where('data_vencimento', '>', $limite);
     }
 
     public function scopeEmRenovacao($query)
     {
-        return $query->where('status', 'proximo');
+        $hoje = now()->startOfDay();
+        $limite = now()->addDays(30)->endOfDay();
+        return $query->whereNotNull('data_vencimento')->whereBetween('data_vencimento', [$hoje, $limite]);
     }
 
     public function scopeVencido($query)
     {
-        return $query->where('status', 'vencido');
+        return $query->whereNotNull('data_vencimento')->where('data_vencimento', '<', now()->startOfDay());
     }
 
     /**
@@ -81,6 +103,12 @@ class Alvara extends Model
     {
         return $query->when($dto->empresa_id, fn($q) => $q->where('empresa_id', $dto->empresa_id))
             ->when($dto->search, fn($q) => $q->where('tipo', 'like', '%' . $dto->search . '%'))
-            ->when($dto->status && $dto->status !== 'todos', fn($q) => $q->where('status', $dto->status));
+            ->when($dto->status && $dto->status !== 'todos', function($q) use ($dto) {
+                if ($dto->status === 'vencido') return $q->vencido();
+                if ($dto->status === 'proximo') return $q->emRenovacao();
+                if ($dto->status === 'vigente') return $q->vigente();
+                
+                return $q->where('status', $dto->status);
+            });
     }
 }

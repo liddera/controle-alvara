@@ -15,5 +15,6 @@ class TipoAlvaraSeeder extends Seeder
         \App\Models\TipoAlvara::updateOrCreate(['slug' => 'sanitario'], ['nome' => 'Alvará Sanitário']);
         \App\Models\TipoAlvara::updateOrCreate(['slug' => 'funcionamento'], ['nome' => 'Alvará de Funcionamento']);
         \App\Models\TipoAlvara::updateOrCreate(['slug' => 'bombeiros'], ['nome' => 'Alvará do Corpo de Bombeiros']);
+        \App\Models\TipoAlvara::updateOrCreate(['slug' => 'policia'], ['nome' => 'Alvará da Polícia Civil']);
     }
 }

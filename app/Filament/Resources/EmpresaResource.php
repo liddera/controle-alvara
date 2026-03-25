@@ -24,6 +24,8 @@ class EmpresaResource extends Resource
 {
     protected static ?string $model = Empresa::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
 
     protected static ?string $navigationLabel = 'Empresas';

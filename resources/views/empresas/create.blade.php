@@ -47,12 +47,19 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tipos de Alvará Possuídos</label>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 p-4 bg-gray-50 rounded-md border">
+                        <div x-data="{ selected: {{ json_encode(old('tipos_alvara', [])) }}.map(String) }" class="grid grid-cols-1 md:grid-cols-2 gap-2 p-4 bg-gray-50 rounded-md border">
                             @foreach($tiposAlvara as $tipo)
-                            <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-white rounded transition">
-                                <input type="checkbox" name="tipos_alvara[]" value="{{ $tipo->id }}" @checked(is_array(old('tipos_alvara')) && in_array($tipo->id, old('tipos_alvara')))>
-                                <span class="text-sm text-gray-700">{{ $tipo->nome }}</span>
-                            </label>
+                            <div class="flex flex-col p-2 hover:bg-white rounded transition">
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" x-model="selected" name="tipos_alvara[]" value="{{ $tipo->id }}" class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                    <span class="text-sm text-gray-700">{{ $tipo->nome }}</span>
+                                </label>
+                                <div x-show="selected.includes('{{ $tipo->id }}')" x-collapse class="mt-2 pl-7">
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Data de Vencimento</label>
+                                    <input type="date" name="datas_vencimento[{{ $tipo->id }}]" value="{{ old('datas_vencimento.'.$tipo->id) }}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 text-sm py-1">
+                                    @error('datas_vencimento.'.$tipo->id) <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
                             @endforeach
                         </div>
                     </div>

@@ -38,12 +38,6 @@ return new class extends Migration
                 $table->dropColumn('tipo');
             }
         });
-
-        // Agora aplicamos o índice único (limpando primeiro duplicatas se houver)
-        Schema::table('alert_configs', function (Blueprint $table) {
-             // O Laravel/Postgres pode ter criado índices automáticos, vamos tentar limpar antes de criar o nosso oficial
-             $table->unique(['owner_id', 'user_id', 'tipo_alvara_id', 'days_before'], 'unique_user_alert');
-        });
     }
 
     /**
@@ -52,7 +46,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('alert_configs', function (Blueprint $table) {
-            $table->dropUnique('unique_user_alert');
             $table->dropColumn(['owner_id', 'tipo_alvara_id']);
             $table->renameColumn('days_before', 'dias_antes');
             $table->renameColumn('is_active', 'ativo');

@@ -14,6 +14,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/export', [DashboardController::class, 'export'])->name('dashboard.export');
     Route::resource('empresas', EmpresaController::class);
     Route::resource('alvaras', AlvaraController::class);
+    Route::post('/alvaras/{alvara}/enviar-email', [AlvaraController::class, 'enviarEmail'])->name('alvaras.enviar-email');
     Route::resource('users', \App\Http\Controllers\UserController::class)->middleware('plan.limit');
     Route::delete('/documentos/{documento}', [AlvaraController::class, 'destroyDocumento'])->name('documentos.destroy');
 });

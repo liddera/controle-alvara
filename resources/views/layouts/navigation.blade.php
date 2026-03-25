@@ -111,24 +111,57 @@
                 <!-- 👤 USER -->
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 text-sm text-gray-500 hover:text-gray-700">
-                            <div>{{ Auth::user()->name }}</div>
-                            <svg class="ml-1 w-4 h-4 fill-current" viewBox="0 0 20 20">
-                                <path d="M5.293 7.293L10 12l4.707-4.707 1.414 1.414L10 14.828 3.879 8.707z" />
+                        <!-- Botão Pílula c/ Avatar Circular -->
+                        <button class="inline-flex items-center gap-2 px-1 py-1 pr-3 border border-gray-200 rounded-full bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition ease-in-out duration-150 shadow-sm ml-2">
+                            @php
+                                $nameParts = explode(' ', Auth::user()->name);
+                                $initials = substr($nameParts[0], 0, 1) . (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : '');
+                            @endphp
+                            
+                            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800 text-gray-200 font-bold text-xs uppercase shadow-inner">
+                                {{ $initials }}
+                            </div>
+
+                            <div class="text-sm font-bold text-gray-700 hidden sm:block">
+                                {{ Auth::user()->name }}
+                            </div>
+
+                            <svg class="w-4 h-4 text-gray-400 ms-1 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
                     </x-slot>
 
                     <x-slot name="content">
+                        <!-- Informações do plano ou cargo (Opcional - bônus visual) -->
+                        <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 rounded-t-md">
+                            <p class="text-xs text-gray-500">Logado como</p>
+                            <p class="text-sm font-semibold truncate text-gray-800">{{ Auth::user()->email }}</p>
+                        </div>
+
+                        <!-- Menu Itens -->
                         <x-dropdown-link :href="route('profile.edit')">
-                            Profile
+                            <div class="flex items-center gap-2 font-medium">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                Meu Perfil
+                            </div>
                         </x-dropdown-link>
+
+                        <!-- Divider Interno -->
+                        <div class="border-t border-gray-100 my-1"></div>
 
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <x-dropdown-link :href="route('logout')"
                                 onclick="event.preventDefault(); this.closest('form').submit();">
-                                Log Out
+                                <div class="flex items-center gap-2 font-medium text-red-600 hover:text-red-700">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Sair do Sistema
+                                </div>
                             </x-dropdown-link>
                         </form>
                     </x-slot>

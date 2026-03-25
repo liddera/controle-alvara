@@ -26,6 +26,8 @@ class AlvaraResource extends Resource
 {
     protected static ?string $model = Alvara::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static ?string $navigationLabel = 'Alvarás';

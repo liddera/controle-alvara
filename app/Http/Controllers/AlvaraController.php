@@ -21,7 +21,11 @@ class AlvaraController extends Controller
         $empresa_id = $request->get('empresa_id');
         $tipo_slug = $request->get('tipo');
 
-        $alvaras = Alvara::with(['empresa', 'tipoAlvara'])
+        $alvaras = Alvara::with([
+            'empresa', 
+            'tipoAlvara', 
+            'notificacoes' => fn($q) => $q->where('tipo', 'envio_documento')->latest()
+        ])
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($empresa_id, fn ($q) => $q->where('empresa_id', $empresa_id))
             ->when($tipo_slug, function ($q) use ($tipo_slug) {
@@ -118,5 +122,36 @@ class AlvaraController extends Controller
         }
         $action->execute($alvara);
         return redirect()->route('alvaras.index')->with('success', 'Alvará removido com sucesso!');
+    }
+
+    public function enviarEmail(Request $request, Alvara $alvara, \App\Actions\Alvaras\EnviarAlvaraPorEmailAction $action)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'nome' => 'nullable|string|max:255',
+            'telefone' => 'nullable|string|max:20',
+            'mensagem' => 'nullable|string',
+            'metodo' => 'nullable|string|in:email,whatsapp'
+        ]);
+
+        try {
+            $notificacao = $action->execute($alvara, $request->only(['nome', 'email', 'telefone', 'mensagem', 'metodo']));
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Alvará enviado por email com sucesso!',
+                'historico' => [
+                    'id' => $notificacao->id,
+                    'data' => $notificacao->created_at->format('d/m/Y H:i'),
+                    'destinatario' => json_decode($notificacao->mensagem)->destinatario_nome ?? 'Desconhecido',
+                    'metodo' => json_decode($notificacao->mensagem)->metodo ?? 'email',
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

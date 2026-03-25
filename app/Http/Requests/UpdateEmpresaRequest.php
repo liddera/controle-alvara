@@ -18,6 +18,8 @@ class UpdateEmpresaRequest extends FormRequest
             'email' => ['required', 'email', 'max:255'],
             'tipos_alvara' => ['nullable', 'array'],
             'tipos_alvara.*' => ['exists:tipo_alvaras,id'],
+            'datas_vencimento' => ['nullable', 'array'],
+            'datas_vencimento.*' => ['nullable', 'date'],
         ];
     }
 }

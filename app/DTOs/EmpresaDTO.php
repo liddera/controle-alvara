@@ -14,6 +14,7 @@ class EmpresaDTO
         public string $telefone,
         public string $email,
         public array $tipos_alvara = [],
+        public array $datas_vencimento = [],
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -26,6 +27,7 @@ class EmpresaDTO
             telefone: $request->validated('telefone'),
             email: $request->validated('email'),
             tipos_alvara: $request->validated('tipos_alvara', []),
+            datas_vencimento: $request->validated('datas_vencimento', []),
         );
     }
 

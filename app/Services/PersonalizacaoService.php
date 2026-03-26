@@ -6,6 +6,7 @@ use App\Models\Personalizacao;
 use App\Models\User;
 use App\DTOs\PersonalizacaoDTO;
 use App\DTOs\ProfilePhotoDTO;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -24,15 +25,22 @@ class PersonalizacaoService
         $personalizacao = Personalizacao::firstOrNew(['owner_id' => $dto->owner_id]);
         $disk = config('filesystems.default');
 
-        if ($dto->logo) {
-            // Process logo with Intervention
-            $image = $this->manager->read($dto->logo->getRealPath());
-            $image->scale(height: 100); // Scale to 100px height maintain aspect ratio
-            $encoded = $image->toPng();
-            
-            $path = 'personalizacao/logo_' . $dto->owner_id . '.png';
-            Storage::disk($disk)->put($path, (string) $encoded);
+        if ($dto->header_logo) {
+            $this->deleteIfExists($personalizacao->header_logo_path, $disk);
+
+            $path = $this->storeHeaderLogo($dto->header_logo, (int) $dto->owner_id, $disk);
+            $personalizacao->header_logo_path = $path;
             $personalizacao->logo_path = $path;
+        }
+
+        if ($dto->sidebar_compact_logo) {
+            $this->deleteIfExists($personalizacao->sidebar_compact_logo_path, $disk);
+
+            $personalizacao->sidebar_compact_logo_path = $this->storeSidebarCompactLogo(
+                $dto->sidebar_compact_logo,
+                (int) $dto->owner_id,
+                $disk
+            );
         }
 
         if ($dto->favicon) {
@@ -89,11 +97,41 @@ class PersonalizacaoService
 
     public function removerLogo(Personalizacao $personalizacao): void
     {
-        if ($personalizacao->logo_path) {
-            Storage::disk(config('filesystems.default'))->delete($personalizacao->logo_path);
-            $personalizacao->logo_path = null;
-            $personalizacao->save();
+        $this->removerHeaderLogo($personalizacao);
+    }
+
+    public function removerHeaderLogo(Personalizacao $personalizacao): void
+    {
+        if (!$personalizacao->header_logo_path && !$personalizacao->logo_path) {
+            return;
         }
+
+        $disk = config('filesystems.default');
+        $previousHeaderPath = $personalizacao->header_logo_path;
+
+        $this->deleteIfExists($previousHeaderPath, $disk);
+
+        if (
+            $personalizacao->logo_path
+            && (!$previousHeaderPath || $personalizacao->logo_path === $previousHeaderPath)
+        ) {
+            $this->deleteIfExists($personalizacao->logo_path, $disk);
+            $personalizacao->logo_path = null;
+        }
+
+        $personalizacao->header_logo_path = null;
+        $personalizacao->save();
+    }
+
+    public function removerSidebarCompactLogo(Personalizacao $personalizacao): void
+    {
+        if (!$personalizacao->sidebar_compact_logo_path) {
+            return;
+        }
+
+        $this->deleteIfExists($personalizacao->sidebar_compact_logo_path, config('filesystems.default'));
+        $personalizacao->sidebar_compact_logo_path = null;
+        $personalizacao->save();
     }
 
     public function removerFavicon(Personalizacao $personalizacao): void
@@ -111,6 +149,37 @@ class PersonalizacaoService
             Storage::disk(config('filesystems.default'))->delete($user->profile_photo_path);
             $user->profile_photo_path = null;
             $user->save();
+        }
+    }
+
+    private function storeHeaderLogo(UploadedFile $file, int $ownerId, string $disk): string
+    {
+        $image = $this->manager->read($file->getRealPath());
+        $image->scale(height: 96);
+        $encoded = $image->toPng();
+
+        $path = 'personalizacao/header_logo_' . $ownerId . '.png';
+        Storage::disk($disk)->put($path, (string) $encoded);
+
+        return $path;
+    }
+
+    private function storeSidebarCompactLogo(UploadedFile $file, int $ownerId, string $disk): string
+    {
+        $image = $this->manager->read($file->getRealPath());
+        $image->scaleDown(width: 72, height: 72);
+        $encoded = $image->toPng();
+
+        $path = 'personalizacao/sidebar_compact_logo_' . $ownerId . '.png';
+        Storage::disk($disk)->put($path, (string) $encoded);
+
+        return $path;
+    }
+
+    private function deleteIfExists(?string $path, string $disk): void
+    {
+        if ($path) {
+            Storage::disk($disk)->delete($path);
         }
     }
 }

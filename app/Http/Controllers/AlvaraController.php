@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Alvara;
 use App\Models\Empresa;
 use App\Models\Documento;
+use App\DTOs\AlvaraFilterDTO;
+use App\Http\Requests\FilterAlvaraRequest;
 use App\Http\Requests\StoreAlvaraRequest;
 use App\Http\Requests\UpdateAlvaraRequest;
 use App\Actions\Alvaras\CriarAlvaraAction;
@@ -17,29 +19,41 @@ use Illuminate\Support\Facades\Storage;
 
 class AlvaraController extends Controller
 {
-    public function index(Request $request)
+    public function index(FilterAlvaraRequest $request)
     {
-        $status = $request->get('status');
-        $empresa_id = $request->get('empresa_id');
-        $tipo_slug = $request->get('tipo');
+        $dto = AlvaraFilterDTO::fromRequest($request);
 
         $alvaras = Alvara::with([
             'empresa', 
             'tipoAlvara', 
             'notificacoes' => fn($q) => $q->where('tipo', 'envio_documento')->latest()
         ])
-            ->when($status, fn ($q) => $q->where('status', $status))
-            ->when($empresa_id, fn ($q) => $q->where('empresa_id', $empresa_id))
-            ->when($tipo_slug, function ($q) use ($tipo_slug) {
-                $q->whereHas('tipoAlvara', fn ($query) => $query->where('slug', $tipo_slug));
-            })
+            ->filterByDto($dto)
             ->latest()
             ->paginate(10);
 
         $empresas = Empresa::all();
         $tiposAlvara = \App\Models\TipoAlvara::all();
+        $status = $dto->status === 'todos' ? '' : $dto->status;
+        $empresa_id = $dto->empresa_id;
+        $tipo_slug = $dto->tipo_slug;
+        $tipoSelecionadoNome = $tipo_slug
+            ? $tiposAlvara->firstWhere('slug', $tipo_slug)?->nome ?? $tipo_slug
+            : null;
+        $vencimento_de = $dto->vencimento_de;
+        $vencimento_ate = $dto->vencimento_ate;
 
-        return view('alvaras.index', compact('alvaras', 'empresas', 'tiposAlvara', 'status', 'empresa_id', 'tipo_slug'));
+        return view('alvaras.index', compact(
+            'alvaras',
+            'empresas',
+            'tiposAlvara',
+            'status',
+            'empresa_id',
+            'tipo_slug',
+            'tipoSelecionadoNome',
+            'vencimento_de',
+            'vencimento_ate'
+        ));
     }
 
     public function create(Request $request)

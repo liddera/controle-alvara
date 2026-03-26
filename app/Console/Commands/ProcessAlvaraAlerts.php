@@ -6,6 +6,7 @@ use App\Models\Alvara;
 use App\Models\AlertConfig;
 use App\Notifications\VencimentoAlvaraNotification;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Notification;
 use Carbon\Carbon;
 
 class ProcessAlvaraAlerts extends Command
@@ -18,9 +19,15 @@ class ProcessAlvaraAlerts extends Command
         $this->info('Iniciando processamento de alertas...');
 
         // Buscamos todas as configurações de alerta ativas
-        $configs = AlertConfig::where('is_active', true)->get();
+        $configs = AlertConfig::where('is_active', true)
+            ->with('user:id,email,name')
+            ->get();
 
         foreach ($configs as $config) {
+            if (! $config->user) {
+                continue;
+            }
+
             $targetDate = Carbon::today()->addDays($config->days_before);
             
             // Buscamos os alvarás que vencem na data alvo para o owner da configuração
@@ -32,13 +39,28 @@ class ProcessAlvaraAlerts extends Command
                 $query->where('tipo_alvara_id', $config->tipo_alvara_id);
             }
 
-            $alvaras = $query->get();
+            $alvaras = $query->with('empresa')->get();
+
+            $primaryEmail = strtolower($config->user->email);
+            $additionalEmails = collect($config->recipient_emails ?? [])
+                ->filter(fn ($email) => filled($email))
+                ->map(fn ($email) => strtolower(trim((string) $email)))
+                ->reject(fn ($email) => $email === $primaryEmail)
+                ->unique()
+                ->values();
 
             foreach ($alvaras as $alvara) {
                 // Notificamos o usuário da configuração
                 $config->user->notify(new VencimentoAlvaraNotification($alvara, $config->days_before));
-                
+
                 $this->line("Notificação enviada para {$config->user->email} sobre o alvará {$alvara->numero} ({$config->days_before} dias antes)");
+
+                foreach ($additionalEmails as $email) {
+                    Notification::route('mail', $email)
+                        ->notify(new VencimentoAlvaraNotification($alvara, $config->days_before));
+
+                    $this->line("Notificação adicional enviada para {$email} sobre o alvará {$alvara->numero} ({$config->days_before} dias antes)");
+                }
             }
         }
 

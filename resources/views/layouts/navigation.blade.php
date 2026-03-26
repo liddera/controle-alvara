@@ -1,20 +1,20 @@
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16 relative">
+        <div class="grid grid-cols-[1fr_auto_1fr] items-center h-16">
 
-            <!-- Espaço vazio à esquerda -->
-            <div class="w-1/3"></div>
+            <div></div>
 
-            <!-- 🔥 LOGO CENTRALIZADA -->
-            <div class="absolute left-1/2 transform -translate-x-1/2">
-                <a href="{{ route('dashboard') }}">
-                    <img src="{{ $personalizacao->logo_url ?? asset('GEAlogo-Photoroom.png') }}" alt="Logo"
-                        class="block h-16 w-auto transition hover:scale-105 {{ $personalizacao->logo_url ? '' : 'brightness-125 contrast-125' }}">
+            <!-- Logo centralizada de forma estável -->
+            <div class="flex justify-center">
+                <a href="{{ route('dashboard') }}" class="inline-flex items-center">
+                    <img src="{{ $personalizacao->header_logo_url ?? asset('GEAlogo-Photoroom.png') }}" alt="Logo"
+                        class="block h-10 sm:h-12 w-auto object-contain transition hover:scale-105">
                 </a>
             </div>
 
-            <!-- Direita: notificações + usuário -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6 gap-4 ml-auto">
+            <!-- Direita: notificações + usuário + menu mobile -->
+            <div class="flex items-center justify-end gap-2 sm:gap-4">
+                <div class="hidden sm:flex sm:items-center sm:ms-6 gap-4">
 
                 <!-- 🔔 NOTIFICAÇÕES -->
                 <x-dropdown align="right" width="128">
@@ -176,17 +176,18 @@
                     </x-slot>
                 </x-dropdown>
 
-            </div>
+                </div>
 
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="p-2 text-gray-400 hover:bg-gray-100 rounded-md">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': !open}" stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': !open, 'inline-flex': open}" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+                <div class="-me-2 flex items-center sm:hidden">
+                    <button @click="open = ! open" class="p-2 text-gray-400 hover:bg-gray-100 rounded-md">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path :class="{'hidden': open, 'inline-flex': !open}" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                            <path :class="{'hidden': !open, 'inline-flex': open}" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
         </div>

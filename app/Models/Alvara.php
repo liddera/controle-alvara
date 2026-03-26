@@ -103,7 +103,12 @@ class Alvara extends Model
     {
         return $query->when($dto->empresa_id, fn($q) => $q->where('empresa_id', $dto->empresa_id))
             ->when($dto->tipo_alvara_id, fn($q) => $q->where('tipo_alvara_id', $dto->tipo_alvara_id))
+            ->when(!$dto->tipo_alvara_id && $dto->tipo_slug, function ($q) use ($dto) {
+                return $q->whereHas('tipoAlvara', fn ($tipoQuery) => $tipoQuery->where('slug', $dto->tipo_slug));
+            })
             ->when($dto->search, fn($q) => $q->where('tipo', 'like', '%' . $dto->search . '%'))
+            ->when($dto->vencimento_de, fn($q) => $q->whereDate('data_vencimento', '>=', $dto->vencimento_de))
+            ->when($dto->vencimento_ate, fn($q) => $q->whereDate('data_vencimento', '<=', $dto->vencimento_ate))
             ->when($dto->status && $dto->status !== 'todos', function($q) use ($dto) {
                 if ($dto->status === 'vencido') return $q->vencido();
                 if ($dto->status === 'proximo') return $q->emRenovacao();

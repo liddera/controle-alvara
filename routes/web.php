@@ -49,6 +49,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/personalization', [\App\Http\Controllers\PersonalizacaoController::class, 'index'])->name('profile.personalization');
     Route::post('/profile/personalization', [\App\Http\Controllers\PersonalizacaoController::class, 'updateSettings'])->name('profile.personalization.update');
     Route::delete('/profile/personalization/logo', [\App\Http\Controllers\PersonalizacaoController::class, 'destroyLogo'])->name('profile.personalization.logo.destroy');
+    Route::delete('/profile/personalization/header-logo', [\App\Http\Controllers\PersonalizacaoController::class, 'destroyHeaderLogo'])->name('profile.personalization.header-logo.destroy');
+    Route::delete('/profile/personalization/sidebar-compact-logo', [\App\Http\Controllers\PersonalizacaoController::class, 'destroySidebarCompactLogo'])->name('profile.personalization.sidebar-compact-logo.destroy');
     Route::delete('/profile/personalization/favicon', [\App\Http\Controllers\PersonalizacaoController::class, 'destroyFavicon'])->name('profile.personalization.favicon.destroy');
     
     Route::post('/profile/photo', [\App\Http\Controllers\PersonalizacaoController::class, 'updateProfilePhoto'])->name('profile.photo.update');

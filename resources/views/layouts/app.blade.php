@@ -37,17 +37,17 @@
         <aside :class="sidebarOpen ? 'w-64' : 'w-20'"
             style="background-color: var(--sidebar-bg); color: var(--sidebar-text);"
             class="transition-all duration-300 flex-shrink-0 flex flex-col h-screen sticky top-0 shadow-lg z-20 border-r border-gray-800 overflow-y-auto">
-            <div class="p-4 border-b border-gray-800 flex items-center justify-center min-h-[90px]">
+            <div class="p-4 border-b border-gray-800 flex items-center justify-center min-h-[80px]">
 
                 <!-- Logo grande (sidebar aberto) -->
-                <img x-show="sidebarOpen" src="{{ $personalizacao->logo_url ?? asset('GEAlogo-Photoroom.png') }}"
+                <img x-show="sidebarOpen" src="{{ $personalizacao->header_logo_url ?? asset('GEAlogo-Photoroom.png') }}"
                     alt="Logo"
-                    class="h-20 w-auto transition-all duration-300 hover:scale-105 drop-shadow-[0_0_12px_rgba(255,255,255,0.35)] {{ $personalizacao->logo_url ? '' : 'brightness-125 contrast-125' }}">
+                    class="h-16 w-auto transition-all duration-300 hover:scale-105">
 
                 <!-- Logo pequena (sidebar fechado) -->
                 <img x-show="!sidebarOpen" x-cloak
-                    src="{{ $personalizacao->logo_url ?? asset('GEAlogo-Photoroom.png') }}" alt="Logo"
-                    class="h-12 w-auto transition-all duration-300 hover:scale-110 opacity-95 drop-shadow-[0_0_10px_rgba(255,255,255,0.3) {{ $personalizacao->logo_url ? '' : 'brightness-125 contrast-125' }}">
+                    src="{{ $personalizacao->sidebar_compact_logo_url ?? asset('sidebralogo.png') }}" alt="Logo compacto"
+                    class="h-10 w-auto transition-all duration-300 hover:scale-110 opacity-95">
             </div>
             <nav class="flex-1 py-6 px-3 space-y-2">
                 <a href="{{ route('dashboard') }}"
@@ -118,10 +118,11 @@
 
                 @role('owner')
                 <div
-                    x-data="{ open: {{ request()->routeIs('profile.tokens') || request()->routeIs('profile.alerts') ? 'true' : 'false' }} }">
+                    x-data="{ open: {{ request()->routeIs('profile.tokens') || request()->routeIs('profile.alerts') || request()->routeIs('profile.personalization') ? 'true' : 'false' }} }">
                     <button @click="open = !open"
                         class="w-full flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('profile.tokens') || request()->routeIs('profile.alerts') || request()->routeIs('profile.personalization') ? 'sidebar-active' : 'sidebar-custom-text-opacity hover:sidebar-active' }}"
-                        :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Configurações">
+                        :class="sidebarOpen ? 'justify-start' : 'justify-center'"
+                        title="Configurações">
                         <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">

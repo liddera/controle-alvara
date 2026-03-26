@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\DashboardService;
 use App\Actions\ExportAlvarasAction;
 use App\DTOs\AlvaraFilterDTO;
+use App\Http\Requests\FilterAlvaraRequest;
 
 class DashboardController extends Controller
 {
@@ -14,7 +14,7 @@ class DashboardController extends Controller
         protected ExportAlvarasAction $exportAction
     ) {}
 
-    public function index(Request $request)
+    public function index(FilterAlvaraRequest $request)
     {
         if ($request->user()->hasRole('super-admin')) {
             return redirect()->to('/admin');
@@ -36,7 +36,7 @@ class DashboardController extends Controller
         return view('dashboard', compact('empresas', 'empresaSelecionada', 'alvaras', 'stats', 'tiposAlvara'));
     }
 
-    public function export(Request $request)
+    public function export(FilterAlvaraRequest $request)
     {
         $dto = AlvaraFilterDTO::fromRequest($request);
         return $this->exportAction->execute($dto);

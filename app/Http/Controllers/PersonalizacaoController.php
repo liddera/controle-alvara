@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Settings\UpdatePersonalizacaoAction;
 use App\Actions\Profile\UpdateProfilePhotoAction;
+use App\Http\Requests\UpdatePersonalizacaoRequest;
 use Illuminate\Http\Request;
 
 class PersonalizacaoController extends Controller
@@ -16,16 +17,8 @@ class PersonalizacaoController extends Controller
         return view('profile.personalization', compact('personalizacao'));
     }
 
-    public function updateSettings(Request $request, UpdatePersonalizacaoAction $action)
+    public function updateSettings(UpdatePersonalizacaoRequest $request, UpdatePersonalizacaoAction $action)
     {
-        $request->validate([
-            'logo' => ['nullable', 'image', 'max:2048'],
-            'favicon' => ['nullable', 'image', 'max:1024'],
-            'sidebar_bg_color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'sidebar_text_color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'sidebar_hover_color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-        ]);
-
         $action->execute($request);
 
         return back()->with('success', 'Personalização atualizada com sucesso!');
@@ -50,10 +43,23 @@ class PersonalizacaoController extends Controller
 
     public function destroyLogo(\App\Services\PersonalizacaoService $service)
     {
+        return $this->destroyHeaderLogo($service);
+    }
+
+    public function destroyHeaderLogo(\App\Services\PersonalizacaoService $service)
+    {
         $ownerId = auth()->user()->owner_id ?? auth()->id();
         $personalizacao = $service->obterPorOwner($ownerId);
-        $service->removerLogo($personalizacao);
-        return back()->with('success', 'Logotipo removido.');
+        $service->removerHeaderLogo($personalizacao);
+        return back()->with('success', 'Logo do header removida.');
+    }
+
+    public function destroySidebarCompactLogo(\App\Services\PersonalizacaoService $service)
+    {
+        $ownerId = auth()->user()->owner_id ?? auth()->id();
+        $personalizacao = $service->obterPorOwner($ownerId);
+        $service->removerSidebarCompactLogo($personalizacao);
+        return back()->with('success', 'Logo compacta da sidebar removida.');
     }
 
     public function destroyFavicon(\App\Services\PersonalizacaoService $service)

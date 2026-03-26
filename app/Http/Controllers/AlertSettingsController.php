@@ -26,6 +26,7 @@ class AlertSettingsController extends Controller
         return view('profile.alerts', [
             'configs' => $this->service->listarPorUsuario(auth()->id()),
             'tiposAlvara' => TipoAlvara::all(),
+            'ownerAlertEmail' => auth()->user()->email,
             'personalizacao' => $this->personalizacaoService->obterPorOwner($ownerId),
         ]);
     }

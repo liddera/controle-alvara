@@ -7,7 +7,8 @@ use Illuminate\Http\UploadedFile;
 class PersonalizacaoDTO
 {
     public function __construct(
-        public ?UploadedFile $logo = null,
+        public ?UploadedFile $header_logo = null,
+        public ?UploadedFile $sidebar_compact_logo = null,
         public ?UploadedFile $favicon = null,
         public ?string $sidebar_bg_color = null,
         public ?string $sidebar_text_color = null,
@@ -18,7 +19,8 @@ class PersonalizacaoDTO
     public static function fromRequest(\Illuminate\Http\Request $request): self
     {
         return new self(
-            logo: $request->file('logo'),
+            header_logo: $request->file('header_logo'),
+            sidebar_compact_logo: $request->file('sidebar_compact_logo'),
             favicon: $request->file('favicon'),
             sidebar_bg_color: $request->input('sidebar_bg_color'),
             sidebar_text_color: $request->input('sidebar_text_color'),

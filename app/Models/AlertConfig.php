@@ -16,6 +16,12 @@ class AlertConfig extends Model
         'tipo_alvara_id',
         'days_before',
         'is_active',
+        'recipient_emails',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'recipient_emails' => 'array',
     ];
 
     public function user(): BelongsTo

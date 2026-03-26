@@ -4,7 +4,7 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Alvarás
                 @if($tipo_slug)
-                    <span class="text-sm text-gray-500 ml-2">— {{ \App\Models\TipoAlvara::where('slug', $tipo_slug)->first()?->nome ?? $tipo_slug }}</span>
+                    <span class="text-sm text-gray-500 ml-2">— {{ $tipoSelecionadoNome ?? $tipo_slug }}</span>
                 @endif
             </h2>
             <a href="{{ route('alvaras.create') }}" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md font-semibold text-sm transition shadow-sm">
@@ -53,6 +53,16 @@
                         <option value="proximo" @selected($status === 'proximo')>⚠ Em Renovação</option>
                         <option value="vencido" @selected($status === 'vencido')>❌ Vencido</option>
                     </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Vencimento de</label>
+                    <input type="date" name="vencimento_de" value="{{ $vencimento_de ?? '' }}"
+                        class="w-full border-gray-300 rounded-md shadow-sm text-sm">
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">até</label>
+                    <input type="date" name="vencimento_ate" value="{{ $vencimento_ate ?? '' }}"
+                        class="w-full border-gray-300 rounded-md shadow-sm text-sm">
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-semibold">Filtrar</button>

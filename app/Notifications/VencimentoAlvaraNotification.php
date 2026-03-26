@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\Alvara;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -21,6 +22,10 @@ class VencimentoAlvaraNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
+        if ($notifiable instanceof AnonymousNotifiable) {
+            return ['mail'];
+        }
+
         return ['mail', 'database'];
     }
 
@@ -30,9 +35,12 @@ class VencimentoAlvaraNotification extends Notification implements ShouldQueue
             ? "vencerá em {$this->daysBefore} dias" 
             : "vence HOJE";
 
+        $recipientName = data_get($notifiable, 'name');
+        $greeting = $recipientName ? "Olá, {$recipientName}!" : 'Olá!';
+
         return (new MailMessage)
             ->subject("Alerta de Vencimento: {$this->alvara->tipo}")
-            ->greeting("Olá, {$notifiable->name}!")
+            ->greeting($greeting)
             ->line("Este é um aviso automático de que o alvará **{$this->alvara->numero}** ({$this->alvara->tipo}) da empresa **{$this->alvara->empresa->nome}** {$statusLabel}.")
             ->line("Data de Vencimento: **{$this->alvara->data_vencimento->format('d/m/Y')}**")
             ->action('Ver Alvará no Painel', route('alvaras.show', $this->alvara))

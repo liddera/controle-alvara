@@ -29,9 +29,9 @@ class DashboardService
 
         return [
             'total' => (clone $query)->count(),
-            'ativos' => (clone $query)->where('status', 'vigente')->count(),
-            'em_renovacao' => (clone $query)->where('status', 'proximo')->count(),
-            'vencidos' => (clone $query)->where('status', 'vencido')->count(),
+            'ativos' => (clone $query)->vigente()->count(),
+            'em_renovacao' => (clone $query)->emRenovacao()->count(),
+            'vencidos' => (clone $query)->vencido()->count(),
         ];
     }
 }

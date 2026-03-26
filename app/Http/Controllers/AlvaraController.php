@@ -11,6 +11,8 @@ use App\Http\Requests\UpdateAlvaraRequest;
 use App\Actions\Alvaras\CriarAlvaraAction;
 use App\Actions\Alvaras\AtualizarAlvaraAction;
 use App\Actions\Alvaras\ExcluirAlvaraAction;
+use App\Actions\Alvaras\UploadDocumentosAction;
+use App\Services\DocumentoService;
 use Illuminate\Support\Facades\Storage;
 
 class AlvaraController extends Controller
@@ -50,23 +52,11 @@ class AlvaraController extends Controller
         return view('alvaras.create', compact('empresas', 'tiposAlvara', 'empresaSelecionada', 'tipoSelecionado'));
     }
 
-    public function store(StoreAlvaraRequest $request, CriarAlvaraAction $action)
+    public function store(StoreAlvaraRequest $request, CriarAlvaraAction $action, UploadDocumentosAction $uploadAction)
     {
         $alvara = $action->execute($request);
 
-        // Upload de documentos
-        if ($request->hasFile('documentos')) {
-            foreach ($request->file('documentos') as $arquivo) {
-                $caminho = $arquivo->store('documentos/' . $alvara->id, 'public');
-                Documento::create([
-                    'alvara_id' => $alvara->id,
-                    'nome_arquivo' => $arquivo->getClientOriginalName(),
-                    'caminho' => $caminho,
-                    'tipo' => $arquivo->getMimeType(),
-                    'tamanho' => $arquivo->getSize(),
-                ]);
-            }
-        }
+        $uploadAction->execute($alvara, $request);
 
         return redirect()->route('alvaras.show', $alvara)
             ->with('success', 'Alvará cadastrado com sucesso!');
@@ -85,40 +75,27 @@ class AlvaraController extends Controller
         return view('alvaras.edit', compact('alvara', 'empresas', 'tiposAlvara'));
     }
 
-    public function update(UpdateAlvaraRequest $request, Alvara $alvara, AtualizarAlvaraAction $action)
+    public function update(UpdateAlvaraRequest $request, Alvara $alvara, AtualizarAlvaraAction $action, UploadDocumentosAction $uploadAction)
     {
         $action->execute($alvara, $request);
 
-        // Upload de novos documentos
-        if ($request->hasFile('documentos')) {
-            foreach ($request->file('documentos') as $arquivo) {
-                $caminho = $arquivo->store('documentos/' . $alvara->id, 'public');
-                Documento::create([
-                    'alvara_id' => $alvara->id,
-                    'nome_arquivo' => $arquivo->getClientOriginalName(),
-                    'caminho' => $caminho,
-                    'tipo' => $arquivo->getMimeType(),
-                    'tamanho' => $arquivo->getSize(),
-                ]);
-            }
-        }
+        $uploadAction->execute($alvara, $request);
 
         return redirect()->route('alvaras.show', $alvara)
             ->with('success', 'Alvará atualizado com sucesso!');
     }
 
-    public function destroyDocumento(Documento $documento)
+    public function destroyDocumento(Documento $documento, DocumentoService $service)
     {
-        Storage::disk('public')->delete($documento->caminho);
-        $documento->delete();
+        $service->delete($documento);
         return back()->with('success', 'Documento removido.');
     }
 
-    public function destroy(Alvara $alvara, ExcluirAlvaraAction $action)
+    public function destroy(Alvara $alvara, ExcluirAlvaraAction $action, DocumentoService $service)
     {
         // Remove documentos do storage
         foreach ($alvara->documentos as $doc) {
-            Storage::disk('public')->delete($doc->caminho);
+            $service->delete($doc);
         }
         $action->execute($alvara);
         return redirect()->route('alvaras.index')->with('success', 'Alvará removido com sucesso!');

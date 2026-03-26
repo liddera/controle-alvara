@@ -8,8 +8,8 @@
             <!-- 🔥 LOGO CENTRALIZADA -->
             <div class="absolute left-1/2 transform -translate-x-1/2">
                 <a href="{{ route('dashboard') }}">
-                    <img src="{{ asset('GEAlogo-Photoroom.png') }}" alt="Logo"
-                        class="block h-16 w-auto transition hover:scale-105">
+                    <img src="{{ $personalizacao->logo_url ?? asset('GEAlogo-Photoroom.png') }}" alt="Logo"
+                        class="block h-16 w-auto transition hover:scale-105 {{ $personalizacao->logo_url ? '' : 'brightness-125 contrast-125' }}">
                 </a>
             </div>
 
@@ -120,10 +120,13 @@
                             1) : '');
                             @endphp
 
-                            <div
-                                class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800 text-gray-200 font-bold text-xs uppercase shadow-inner">
-                                {{ $initials }}
-                            </div>
+                            @if(auth()->user()->profile_photo_url)
+                                <img src="{{ auth()->user()->profile_photo_url }}" alt="{{ auth()->user()->name }}" class="w-8 h-8 rounded-full object-cover shadow-inner border border-gray-200">
+                            @else
+                                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800 text-gray-200 font-bold text-xs uppercase shadow-inner">
+                                    {{ $initials }}
+                                </div>
+                            @endif
 
                             <div class="text-sm font-bold text-gray-700 hidden sm:block">
                                 {{ Auth::user()->name }}

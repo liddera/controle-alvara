@@ -102,6 +102,7 @@ class Alvara extends Model
     public function scopeFilterByDto($query, AlvaraFilterDTO $dto)
     {
         return $query->when($dto->empresa_id, fn($q) => $q->where('empresa_id', $dto->empresa_id))
+            ->when($dto->tipo_alvara_id, fn($q) => $q->where('tipo_alvara_id', $dto->tipo_alvara_id))
             ->when($dto->search, fn($q) => $q->where('tipo', 'like', '%' . $dto->search . '%'))
             ->when($dto->status && $dto->status !== 'todos', function($q) use ($dto) {
                 if ($dto->status === 'vencido') return $q->vencido();

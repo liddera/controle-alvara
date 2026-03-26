@@ -7,7 +7,10 @@ use App\Http\Controllers\AlvaraController;
 use App\Models\Documento;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('dashboard'));
+Route::get('/', function () {
+    $plans = \App\Models\Plan::all();
+    return view('welcome', compact('plans'));
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -41,6 +44,15 @@ Route::middleware('auth')->group(function () {
     })->name('notifications.mark-as-read');
 
     Route::get('/notifications/{notification}/read', [\App\Http\Controllers\AlertSettingsController::class, 'readAndRedirect'])->name('notifications.read');
+
+    // Personalization & Profile Photo
+    Route::get('/profile/personalization', [\App\Http\Controllers\PersonalizacaoController::class, 'index'])->name('profile.personalization');
+    Route::post('/profile/personalization', [\App\Http\Controllers\PersonalizacaoController::class, 'updateSettings'])->name('profile.personalization.update');
+    Route::delete('/profile/personalization/logo', [\App\Http\Controllers\PersonalizacaoController::class, 'destroyLogo'])->name('profile.personalization.logo.destroy');
+    Route::delete('/profile/personalization/favicon', [\App\Http\Controllers\PersonalizacaoController::class, 'destroyFavicon'])->name('profile.personalization.favicon.destroy');
+    
+    Route::post('/profile/photo', [\App\Http\Controllers\PersonalizacaoController::class, 'updateProfilePhoto'])->name('profile.photo.update');
+    Route::delete('/profile/photo', [\App\Http\Controllers\PersonalizacaoController::class, 'destroyProfilePhoto'])->name('profile.photo.destroy');
 });
 
 // Admin Routes (SaaS) are now handled by Filament at /admin

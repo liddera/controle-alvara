@@ -9,7 +9,7 @@ O **Alvras** é uma plataforma robusta desenvolvida em Laravel para gerenciar em
 - **Backend:** PHP 8.2+ / [Laravel 12](https://laravel.com)
 - **Frontend:** Blade, TailwindCSS, Alpine.js (Breeze Starter Kit)
 - **Banco de Dados:** PostgreSQL
-- **Integrações:** Sanctum (API Auth), Storage (Local/S3)
+- **Integrações:** Sanctum (API Auth), Storage (Local/S3/MinIO)
 - **Assets:** Vite
 
 ---
@@ -102,3 +102,34 @@ php artisan schedule:work
 - `app/DTOs`: Objetos de transferência de dados.
 - `resources/views`: Templates Blade para Empresas e Alvarás.
 
+---
+
+## ☁️ Configuração de Armazenamento (Storage)
+
+O sistema utiliza o padrão **Adapter Pattern** através do Laravel Filesystem/Flysystem. Isso permite trocar de provedor de arquivos (Local, MinIO, AWS S3, DigitalOcean) apenas alterando o `.env`.
+
+### 1. Ambiente Local (MinIO)
+Por padrão, o projeto está configurado para usar o **MinIO** (S3-compatible) via Docker.
+- **Console:** `http://localhost:9001` (User: `minio` / Pass: `minio123`)
+- **Bucket:** `alvras` (Deve ser criado manualmente no primeiro acesso ou via comando `mc`).
+
+Para tornar os arquivos legíveis no navegador:
+```bash
+docker exec -it alvras-minio-1 mc alias set myminio http://localhost:9000 minio minio123 && \
+docker exec -it alvras-minio-1 mc anonymous set download myminio/alvras
+```
+
+### 2. Mudando para Produção (AWS S3)
+Para trocar para a **AWS S3** ou outro provedor, basta atualizar as seguintes variáveis no seu `.env`:
+
+```env
+FILESYSTEM_DISK=s3
+AWS_ACCESS_KEY_ID=seu_access_key
+AWS_SECRET_ACCESS_KEY=seu_secret_key
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=seu_bucket_producao
+AWS_URL=https://seu_bucket_producao.s3.amazonaws.com
+AWS_USE_PATH_STYLE_ENDPOINT=false # Use false para AWS S3 real
+```
+
+O código em `DocumentoService` e `UploadDocumentosAction` permanecerá idêntico, garantindo total portabilidade.

@@ -20,4 +20,27 @@ class Documento extends Model
     {
         return $this->belongsTo(Alvara::class);
     }
+
+    /**
+     * Get the public URL for the document.
+     */
+    public function getUrlAttribute(): string
+    {
+        return \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($this->caminho);
+    }
+
+    /**
+     * Get the formatted file size.
+     */
+    public function getTamanhoFormatadoAttribute(): string
+    {
+        $bytes = $this->tamanho;
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+        for ($i = 0; $bytes > 1024; $i++) {
+            $bytes /= 1024;
+        }
+
+        return round($bytes, 2) . ' ' . $units[$i];
+    }
 }

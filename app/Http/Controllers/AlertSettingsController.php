@@ -14,13 +14,19 @@ use Illuminate\Notifications\DatabaseNotification;
 
 class AlertSettingsController extends Controller
 {
-    public function __construct(private AlertConfigService $service) {}
+    public function __construct(
+        private AlertConfigService $service,
+        private \App\Services\PersonalizacaoService $personalizacaoService
+    ) {}
 
     public function index(): View
     {
+        $ownerId = auth()->user()->owner_id ?? auth()->id();
+        
         return view('profile.alerts', [
             'configs' => $this->service->listarPorUsuario(auth()->id()),
             'tiposAlvara' => TipoAlvara::all(),
+            'personalizacao' => $this->personalizacaoService->obterPorOwner($ownerId),
         ]);
     }
 

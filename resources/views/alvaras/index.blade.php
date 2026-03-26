@@ -28,12 +28,13 @@
             <form method="GET" action="{{ route('alvaras.index') }}" class="bg-white p-4 rounded-lg shadow-sm flex flex-col md:flex-row gap-4 items-end">
                 <div class="flex-1">
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Empresa</label>
-                    <select name="empresa_id" class="w-full border-gray-300 rounded-md shadow-sm text-sm">
-                        <option value="">Todas as Empresas</option>
-                        @foreach($empresas as $emp)
-                        <option value="{{ $emp->id }}" @selected($empresa_id == $emp->id)>{{ $emp->nome }}</option>
-                        @endforeach
-                    </select>
+                    <x-searchable-select 
+                        name="empresa_id" 
+                        :options="$empresas->map(fn($e) => ['id' => $e->id, 'nome' => $e->nome])->values()->toArray()"
+                        :value="$empresa_id"
+                        :initialSearch="$empresas->firstWhere('id', $empresa_id)?->nome ?? ''"
+                        placeholder="Todas as Empresas"
+                    />
                 </div>
                 <div class="flex-1">
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Tipo de Alvará</label>

@@ -17,11 +17,13 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Empresa <span class="text-red-500">*</span></label>
-                        <select name="empresa_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500">
-                            @foreach($empresas as $empresa)
-                            <option value="{{ $empresa->id }}" @selected(old('empresa_id', $alvara->empresa_id) == $empresa->id)>{{ $empresa->nome }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select 
+                            name="empresa_id" 
+                            :options="$empresas->map(fn($e) => ['id' => $e->id, 'nome' => $e->nome])->values()->toArray()"
+                            :value="old('empresa_id', $alvara->empresa_id)"
+                            :initialSearch="$empresas->firstWhere('id', old('empresa_id', $alvara->empresa_id))?->nome ?? ''"
+                            placeholder="Selecione a empresa..."
+                        />
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

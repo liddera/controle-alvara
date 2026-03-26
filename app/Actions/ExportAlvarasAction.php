@@ -34,7 +34,7 @@ class ExportAlvarasAction
             foreach ($alvaras as $alvara) {
                 fputcsv($file, [
                     $alvara->id,
-                    $alvara->empresa->razao_social ?? 'N/A',
+                    $alvara->empresa->nome ?? 'N/A',
                     $alvara->tipo,
                     $alvara->numero ?? '-',
                     $alvara->data_vencimento->format('d/m/Y'),

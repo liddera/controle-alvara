@@ -15,6 +15,7 @@ class EmpresaController extends Controller
     public function index(Request $request)
     {
         $tipo_slug = $request->get('tipo');
+        $search = $request->get('search');
         $query = Empresa::withCount('alvaras');
 
         if ($tipo_slug) {
@@ -23,9 +24,16 @@ class EmpresaController extends Controller
             });
         }
 
-        $empresas = $query->latest()->paginate(10);
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nome', 'ilike', '%' . $search . '%')
+                  ->orWhere('cnpj', 'ilike', '%' . $search . '%');
+            });
+        }
 
-        return view('empresas.index', compact('empresas', 'tipo_slug'));
+        $empresas = $query->latest()->paginate(10)->withQueryString();
+
+        return view('empresas.index', compact('empresas', 'tipo_slug', 'search'));
     }
 
     public function create()

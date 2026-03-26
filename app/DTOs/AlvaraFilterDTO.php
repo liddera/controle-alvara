@@ -8,6 +8,7 @@ class AlvaraFilterDTO
 {
     public function __construct(
         public ?int $empresa_id,
+        public ?int $tipo_alvara_id,
         public ?string $search,
         public ?string $status
     ) {}
@@ -16,6 +17,7 @@ class AlvaraFilterDTO
     {
         return new self(
             empresa_id: $request->integer('empresa_id') ?: null,
+            tipo_alvara_id: $request->integer('tipo_alvara_id') ?: null,
             search: $request->string('search')->trim() ?: null,
             status: $request->string('status')->trim() ?: 'todos'
         );

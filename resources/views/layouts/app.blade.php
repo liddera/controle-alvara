@@ -13,12 +13,21 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/css/sidebar.css', 'resources/js/preview.js'])
     <style>
         [x-cloak] {
             display: none !important;
         }
+
+        :root {
+            --sidebar-bg: {{ $personalizacao->sidebar_bg_color ?? '#111827' }};
+            --sidebar-text: {{ $personalizacao->sidebar_text_color ?? '#ffffff' }};
+            --sidebar-hover-bg: {{ $personalizacao->sidebar_hover_color ?? '#1f2937' }};
+        }
     </style>
+    @if($personalizacao->favicon_url)
+    <link rel="icon" type="image/png" href="{{ $personalizacao->favicon_url }}">
+    @endif
 </head>
 
 <body class="font-sans antialiased">
@@ -26,20 +35,23 @@
 
         <!-- Sidebar -->
         <aside :class="sidebarOpen ? 'w-64' : 'w-20'"
-            class="transition-all duration-300 bg-gray-900 text-white flex-shrink-0 flex flex-col h-screen sticky top-0 shadow-lg z-20 border-r border-gray-800 overflow-y-auto">
+            style="background-color: var(--sidebar-bg); color: var(--sidebar-text);"
+            class="transition-all duration-300 flex-shrink-0 flex flex-col h-screen sticky top-0 shadow-lg z-20 border-r border-gray-800 overflow-y-auto">
             <div class="p-4 border-b border-gray-800 flex items-center justify-center min-h-[90px]">
 
                 <!-- Logo grande (sidebar aberto) -->
-                <img x-show="sidebarOpen" src="{{ asset('GEAlogo-Photoroom.png') }}" alt="GEA Logo"
-                    class="h-20 w-auto transition-all duration-300 hover:scale-105 drop-shadow-[0_0_12px_rgba(255,255,255,0.35)] brightness-125 contrast-125">
+                <img x-show="sidebarOpen" src="{{ $personalizacao->logo_url ?? asset('GEAlogo-Photoroom.png') }}"
+                    alt="Logo"
+                    class="h-20 w-auto transition-all duration-300 hover:scale-105 drop-shadow-[0_0_12px_rgba(255,255,255,0.35)] {{ $personalizacao->logo_url ? '' : 'brightness-125 contrast-125' }}">
 
                 <!-- Logo pequena (sidebar fechado) -->
-                <img x-show="!sidebarOpen" x-cloak src="{{ asset('GEAlogo-Photoroom.png') }}" alt="GEA"
-                    class="h-12 w-auto transition-all duration-300 hover:scale-110 opacity-95 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] brightness-125 contrast-125">
+                <img x-show="!sidebarOpen" x-cloak
+                    src="{{ $personalizacao->logo_url ?? asset('GEAlogo-Photoroom.png') }}" alt="Logo"
+                    class="h-12 w-auto transition-all duration-300 hover:scale-110 opacity-95 drop-shadow-[0_0_10px_rgba(255,255,255,0.3) {{ $personalizacao->logo_url ? '' : 'brightness-125 contrast-125' }}">
             </div>
             <nav class="flex-1 py-6 px-3 space-y-2">
                 <a href="{{ route('dashboard') }}"
-                    class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('dashboard') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}"
+                    class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('dashboard') ? 'sidebar-active' : 'sidebar-custom-text-opacity' }}"
                     :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Dashboard">
                     <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -51,7 +63,7 @@
 
                 @unlessrole('super-admin')
                 <a href="{{ route('empresas.index') }}"
-                    class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('empresas.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}"
+                    class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('empresas.*') ? 'sidebar-active' : 'sidebar-custom-text-opacity' }}"
                     :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Empresas">
                     <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -63,43 +75,22 @@
                 @endunlessrole
 
                 @unlessrole('super-admin')
-                <div x-data="{ open: {{ request()->routeIs('alvaras.*') ? 'true' : 'false' }} }">
-                    <div class="flex items-center">
-                        <a href="{{ route('alvaras.index') }}"
-                            class="flex-1 flex items-center px-4 py-2 rounded-l-md font-semibold transition {{ request()->routeIs('alvaras.index') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}"
-                            :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Alvarás">
-                            <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                            <span x-show="sidebarOpen" x-cloak class="ml-3">Alvarás</span>
-                        </a>
-                        <button @click="open = !open"
-                            class="px-2 py-2 rounded-r-md transition {{ request()->routeIs('alvaras.*') && !request()->routeIs('alvaras.index') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}"
-                            x-show="sidebarOpen">
-                            <svg class="w-4 h-4 transition-transform" :class="open ? 'rotate-180' : ''" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div x-show="open && sidebarOpen" x-cloak x-transition class="mt-2 ml-10 space-y-1">
-                        @foreach($tiposAlvara as $tipo)
-                        <a href="{{ route('alvaras.index', ['tipo' => $tipo->slug]) }}"
-                            class="block px-4 py-2 text-sm {{ request()->query('tipo') == $tipo->slug ? 'text-white font-bold' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} rounded-md">
-                            {{ $tipo->nome }}
-                        </a>
-                        @endforeach
-                    </div>
-                </div>
+                <a href="{{ route('alvaras.index') }}"
+                    class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('alvaras.*') ? 'sidebar-active' : 'sidebar-custom-text-opacity' }}"
+                    :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Alvarás">
+                    <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    <span x-show="sidebarOpen" x-cloak class="ml-3">Alvarás</span>
+                </a>
                 @endunlessrole
 
+{{-- 
                 @role('owner')
                 <a href="{{ route('users.index') }}"
-                    class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('users.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}"
+                    class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('users.*') ? 'sidebar-active' : 'sidebar-custom-text-opacity' }}"
                     :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Equipe">
                     <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -109,11 +100,13 @@
                     <span x-show="sidebarOpen" x-cloak class="ml-3">Equipe</span>
                 </a>
                 @endrole
+--}}
 
                 {{-- Links de admin para o site Blade removidos, pois o Super Admin agora usa o Filament --}}
 
+{{-- 
                 <a href="{{ route('profile.edit') }}"
-                    class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('profile.edit') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}"
+                    class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('profile.edit') ? 'sidebar-active' : 'sidebar-custom-text-opacity' }}"
                     :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Meu Perfil">
                     <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -121,12 +114,13 @@
                     </svg>
                     <span x-show="sidebarOpen" x-cloak class="ml-3">Meu Perfil</span>
                 </a>
+--}}
 
                 @role('owner')
                 <div
                     x-data="{ open: {{ request()->routeIs('profile.tokens') || request()->routeIs('profile.alerts') ? 'true' : 'false' }} }">
                     <button @click="open = !open"
-                        class="w-full flex items-center px-4 py-2 rounded-md font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white"
+                        class="w-full flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('profile.tokens') || request()->routeIs('profile.alerts') || request()->routeIs('profile.personalization') ? 'sidebar-active' : 'sidebar-custom-text-opacity hover:sidebar-active' }}"
                         :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Configurações">
                         <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -145,16 +139,17 @@
 
                     <div x-show="open && sidebarOpen" x-cloak x-transition class="mt-2 ml-10 space-y-1">
                         <a href="{{ route('profile.tokens') }}"
-                            class="block px-4 py-2 text-sm {{ request()->routeIs('profile.tokens') ? 'text-white font-bold' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} rounded-md">
+                            class="block px-4 py-2 text-sm {{ request()->routeIs('profile.tokens') ? 'sidebar-active font-bold' : 'sidebar-sub-item hover:sidebar-active' }} rounded-md">
                             Tokens de API
                         </a>
                         <a href="{{ route('profile.alerts') }}"
-                            class="block px-4 py-2 text-sm {{ request()->routeIs('profile.alerts') ? 'text-white font-bold' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} rounded-md">
+                            class="block px-4 py-2 text-sm {{ request()->routeIs('profile.alerts') ? 'sidebar-active font-bold' : 'sidebar-sub-item hover:sidebar-active' }} rounded-md">
                             Alertas de Vencimento
                         </a>
-                        <span class="block px-4 py-2 text-sm text-gray-600 cursor-not-allowed">
-                            Personalização (Em breve)
-                        </span>
+                        <a href="{{ route('profile.personalization') }}"
+                            class="block px-4 py-2 text-sm {{ request()->routeIs('profile.personalization') ? 'sidebar-active font-bold' : 'sidebar-sub-item hover:sidebar-active' }} rounded-md">
+                            Personalização
+                        </a>
                     </div>
                 </div>
                 @endrole
@@ -163,17 +158,19 @@
             <!-- Toggle Sidebar Button Bottom -->
             <div class="border-t border-gray-800 p-4">
                 <button @click="sidebarOpen = !sidebarOpen"
-                    class="w-full flex items-center text-gray-400 hover:text-white transition"
-                    :class="sidebarOpen ? 'justify-end' : 'justify-center'" title="Recolher/Expandir menu">
-                    <svg x-show="sidebarOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
-                    </svg>
-                    <svg x-show="!sidebarOpen" x-cloak class="w-6 h-6" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
-                    </svg>
+                    class="w-full h-12 flex items-center px-4 rounded-xl sidebar-custom-text-opacity transition"
+                    :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Recolher/Expandir menu">
+                    <div class="flex items-center justify-center w-6 h-6 shrink-0">
+                        <svg x-show="sidebarOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                        </svg>
+                        <svg x-show="!sidebarOpen" x-cloak class="w-6 h-6" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
                 </button>
             </div>
         </aside>

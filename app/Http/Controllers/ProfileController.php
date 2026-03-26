@@ -34,7 +34,10 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(
+        ProfileUpdateRequest $request,
+        \App\Services\PersonalizacaoService $personalizacaoService
+    ): RedirectResponse
     {
         $request->user()->fill($request->validated());
 
@@ -43,6 +46,11 @@ class ProfileController extends Controller
         }
 
         $request->user()->save();
+
+        if ($request->hasFile('profile_photo')) {
+            $dto = \App\DTOs\ProfilePhotoDTO::fromRequest($request);
+            $personalizacaoService->atualizarFotoPerfil($dto);
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }

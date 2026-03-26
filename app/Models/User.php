@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 use Spatie\Permission\Traits\HasRoles;
@@ -37,7 +38,13 @@ class User extends Authenticatable implements FilamentUser
         'is_active',
         'deactivated_at',
         'last_login_at',
+        'profile_photo_path',
     ];
+
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        return $this->profile_photo_path ? Storage::disk(config('filesystems.default'))->url($this->profile_photo_path) : null;
+    }
 
     protected $hidden = [
         'password',

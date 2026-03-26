@@ -1,0 +1,30 @@
+/* Static styles for the custom sidebar */
+
+.sidebar-custom-text {
+    color: var(--sidebar-text) !important;
+}
+
+.sidebar-custom-text-opacity {
+    color: var(--sidebar-text) !important;
+    opacity: 0.75;
+}
+
+.sidebar-custom-text:hover, 
+.sidebar-custom-text-opacity:hover,
+.sidebar-active {
+    color: var(--sidebar-text) !important;
+    opacity: 1 !important;
+    background-color: var(--sidebar-hover-bg) !important;
+}
+
+/* Ensure sub-menu items also use the custom color */
+.sidebar-sub-item {
+    color: var(--sidebar-text) !important;
+    opacity: 0.6;
+}
+
+.sidebar-sub-item:hover, 
+.sidebar-sub-item.active {
+    opacity: 1 !important;
+    background-color: var(--sidebar-hover-bg) !important;
+}

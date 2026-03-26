@@ -31,8 +31,9 @@ class DashboardController extends Controller
 
         $alvaras = $this->dashboardService->getFilteredAlvaras($dto);
         $stats = $this->dashboardService->getStats($dto);
+        $tiposAlvara = \App\Models\TipoAlvara::all();
         
-        return view('dashboard', compact('empresas', 'empresaSelecionada', 'alvaras', 'stats'));
+        return view('dashboard', compact('empresas', 'empresaSelecionada', 'alvaras', 'stats', 'tiposAlvara'));
     }
 
     public function export(Request $request)

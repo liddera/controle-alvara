@@ -8,7 +8,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-
 use Illuminate\Queue\SerializesModels;
 
 class VencimentoAlvaraNotification extends Notification implements ShouldQueue
@@ -31,9 +30,9 @@ class VencimentoAlvaraNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $statusLabel = $this->daysBefore > 0 
-            ? "vencerá em {$this->daysBefore} dias" 
-            : "vence HOJE";
+        $statusLabel = $this->daysBefore > 0
+            ? "vencerá em {$this->daysBefore} dias"
+            : 'vence HOJE';
 
         $recipientName = data_get($notifiable, 'name');
         $greeting = $recipientName ? "Olá, {$recipientName}!" : 'Olá!';
@@ -49,6 +48,14 @@ class VencimentoAlvaraNotification extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
+        $statusLabel = match (true) {
+            $this->daysBefore === 0 => 'vence hoje.',
+            $this->daysBefore === 1 => 'vence em 1 dia.',
+            default => "vence em {$this->daysBefore} dias.",
+        };
+
+        $alvaraNome = $this->alvara->tipoAlvara?->nome ?? $this->alvara->tipo;
+
         return [
             'alvara_id' => $this->alvara->id,
             'empresa_nome' => $this->alvara->empresa->nome,
@@ -56,7 +63,7 @@ class VencimentoAlvaraNotification extends Notification implements ShouldQueue
             'numero' => $this->alvara->numero,
             'data_vencimento' => $this->alvara->data_vencimento->format('Y-m-d'),
             'days_before' => $this->daysBefore,
-            'message' => "O alvará {$this->alvara->numero} vence em {$this->daysBefore} dias.",
+            'message' => "O alvará {$alvaraNome}, da empresa {$this->alvara->empresa->nome}, {$statusLabel}",
         ];
     }
 }

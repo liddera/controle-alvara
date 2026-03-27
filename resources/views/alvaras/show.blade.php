@@ -88,7 +88,6 @@
                         </div>
                         <div class="flex items-center gap-3">
                             <a href="{{ Storage::url($doc->caminho) }}" target="_blank" class="text-blue-500 hover:text-blue-700 text-sm font-semibold">Ver</a>
-                            <a href="{{ Storage::url($doc->caminho) }}" download="{{ $doc->nome_arquivo }}" class="text-gray-500 hover:text-gray-700 text-sm">Baixar</a>
                             <form method="POST" action="{{ route('documentos.destroy', $doc) }}" onsubmit="return confirm('Remover documento?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-400 hover:text-red-700 text-sm">Remover</button>

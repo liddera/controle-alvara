@@ -10,7 +10,7 @@
                 <p style="margin: 0 0 6px 0; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6b7280;">Aviso de Alvará</p>
                 <h2 style="margin: 0 0 12px 0; color: #0f172a; font-size: 24px;">Olá, {{ $destinatarioNome }}!</h2>
                 <p style="margin: 0 0 14px 0; font-size: 15px; color: #334155;">
-                    Segue em anexo o documento referente ao alvará da empresa <strong>{{ $alvara->empresa->nome }}</strong>.
+                    Confira abaixo os dados do alvará da empresa <strong>{{ $alvara->empresa->nome }}</strong>.
                 </p>
 
                 <div style="margin: 20px 0; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
@@ -41,16 +41,28 @@
                     </div>
                 </div>
 
+                @if($alvara->documentos->isNotEmpty())
+                    <div style="margin: 18px 0 22px 0;">
+                        <p style="margin: 0 0 12px 0; font-size: 14px; color: #334155;">
+                            Baixe o documento pelo botão abaixo:
+                        </p>
+
+                        @foreach($alvara->documentos as $documento)
+                            <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($documento->caminho) }}"
+                                target="_blank"
+                                style="display: inline-block; margin: 0 10px 10px 0; padding: 12px 18px; border-radius: 12px; background: #0ea5e9; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700;">
+                                {{ $alvara->documentos->count() > 1 ? 'Baixar ' . $documento->nome_arquivo : 'Baixar documento' }}
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
+
                 @if($mensagemPersonalizada)
                     <div style="margin: 18px 0; padding: 14px 16px; border-left: 4px solid #0ea5e9; background: #f0f9ff; border-radius: 10px;">
                         <p style="margin: 0 0 6px 0; font-weight: 700; color: #0f172a;">Mensagem adicional</p>
                         <p style="margin: 0; color: #334155; white-space: pre-line;">{!! nl2br(e($mensagemPersonalizada)) !!}</p>
                     </div>
                 @endif
-
-                <p style="margin: 10px 0 18px 0; font-size: 14px; color: #334155;">
-                    Os documentos estão anexados a este email.
-                </p>
 
                 <p style="margin: 24px 0 0 0; font-size: 13px; color: #6b7280; line-height: 1.5;">
                     Atenciosamente,<br>

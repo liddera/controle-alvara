@@ -17,7 +17,7 @@
                 <div class="hidden sm:flex sm:items-center sm:ms-6 gap-4">
 
                 <!-- 🔔 NOTIFICAÇÕES -->
-                <x-dropdown align="right" width="128">
+                <x-dropdown align="right" width="w-[22rem]">
                     <x-slot name="trigger">
                         <button
                             class="relative p-2 text-gray-500 hover:text-amber-500 transition transform hover:scale-105">

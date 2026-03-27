@@ -227,12 +227,13 @@
         <div class="p-6">
             <h3 class="text-lg font-semibold text-gray-900">Como funciona a integracao com Google Agenda</h3>
             <p class="mt-3 text-sm leading-6 text-gray-600">
-                Quando um alerta chegar ao momento configurado, o Alvras cria um evento no seu Google Agenda usando a data de vencimento do alvara como base.
+                Quando um alerta entra na antecedencia configurada, o sistema cria um evento no Google Agenda.
             </p>
             <div class="mt-4 space-y-2 text-sm text-gray-600">
-                <p>A data do evento e calculada assim: data de vencimento menos os dias de antecedencia do alerta.</p>
+                <p>A data do evento e definida a partir da data de vencimento do alvara, aplicando os dias de antecedencia do alerta.</p>
+                <p>Exemplo: se o vencimento for em 30/06 e o alerta estiver configurado para 15 dias antes, o evento sera criado para 15/06.</p>
                 <p>O horario do evento sera fixo, das 08:00 as 09:00.</p>
-                <p>A descricao do evento leva empresa, tipo, numero do alvara e a data real de vencimento.</p>
+                <p>A descricao inclui empresa, tipo, numero do alvara e a data real de vencimento.</p>
             </div>
             <div class="mt-6 flex justify-end">
                 <button

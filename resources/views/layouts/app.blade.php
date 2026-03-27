@@ -44,10 +44,18 @@
                     alt="Logo"
                     class="h-16 w-auto transition-all duration-300 hover:scale-105">
 
-                <!-- Logo pequena (sidebar fechado) -->
-                <img x-show="!sidebarOpen" x-cloak
-                    src="{{ $personalizacao->sidebar_compact_logo_url ?? asset('sidebralogo.png') }}" alt="Logo compacto"
-                    class="h-10 w-auto transition-all duration-300 hover:scale-110 opacity-95">
+                <div x-show="!sidebarOpen" x-cloak class="w-full">
+                    <button @click="sidebarOpen = true" type="button"
+                        class="w-full h-12 flex items-center px-4 rounded-xl sidebar-custom-text-opacity transition justify-center"
+                        title="Expandir menu">
+                        <div class="flex items-center justify-center w-6 h-6 shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                    </button>
+                </div>
             </div>
             <nav class="flex-1 py-6 px-3 space-y-2">
                 <a href="{{ route('dashboard') }}"

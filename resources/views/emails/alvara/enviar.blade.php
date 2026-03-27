@@ -7,6 +7,14 @@
     <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background: #ffffff; border-radius: 16px; box-shadow: 0 10px 40px rgba(31,41,55,0.08); padding: 28px;">
         <tr>
             <td>
+                @if(!empty($brandLogo))
+                    <div style="margin: 0 0 18px 0;">
+                        <img src="{{ $message->embedData($brandLogo['contents'], $brandLogo['name'], $brandLogo['mime']) }}"
+                            alt="Logo da marca"
+                            style="display: block; max-height: 56px; width: auto;">
+                    </div>
+                @endif
+
                 <p style="margin: 0 0 6px 0; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6b7280;">Aviso de Alvará</p>
                 <h2 style="margin: 0 0 12px 0; color: #0f172a; font-size: 24px;">Olá, {{ $destinatarioNome }}!</h2>
                 <p style="margin: 0 0 14px 0; font-size: 15px; color: #334155;">

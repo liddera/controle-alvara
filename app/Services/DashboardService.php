@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
+use App\DTOs\AlvaraFilterDTO;
 use App\Models\Alvara;
 use App\Models\Empresa;
-use App\DTOs\AlvaraFilterDTO;
-use Illuminate\Support\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class DashboardService
 {
@@ -22,10 +22,9 @@ class DashboardService
 
     public function getStats(AlvaraFilterDTO $dto): array
     {
-        // Garantimos que os contadores respeitem a empresa e busca atual
-        // Note: O Total geralmente ignora o filtro de status mas respeita o de empresa/busca,
-        // mas para ser 100% coerente com o que o usuário vê, vamos filtrar tudo.
-        $query = Alvara::filterByDto($dto);
+        // Os cards do topo devem respeitar o contexto atual (empresa, tipo, período etc.),
+        // mas não podem encolher quando a listagem é filtrada por status.
+        $query = Alvara::filterByDto($dto->withoutStatus());
 
         return [
             'total' => (clone $query)->count(),

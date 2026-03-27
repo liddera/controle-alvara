@@ -114,4 +114,68 @@ class AlvaraPeriodFilterTest extends TestCase
         $response->assertSee('15/05/2026');
         $response->assertDontSee('28/06/2026');
     }
+
+    public function test_dashboard_status_filter_does_not_change_summary_cards(): void
+    {
+        $user = User::factory()->create();
+
+        $tipo = TipoAlvara::create([
+            'nome' => 'Alvara de Funcionamento',
+            'slug' => 'alvara-funcionamento',
+        ]);
+
+        $empresa = Empresa::create([
+            'user_id' => $user->id,
+            'owner_id' => $user->id,
+            'nome' => 'Empresa Cards',
+            'cnpj' => '33.333.333/0001-33',
+            'responsavel' => 'Teste',
+            'telefone' => '69999999999',
+            'email' => 'contato@cards.com',
+        ]);
+
+        Alvara::create([
+            'empresa_id' => $empresa->id,
+            'user_id' => $user->id,
+            'owner_id' => $user->id,
+            'tipo_alvara_id' => $tipo->id,
+            'tipo' => $tipo->nome,
+            'numero' => 'ALV-ATIVO',
+            'data_vencimento' => now()->addDays(60)->toDateString(),
+            'status' => 'vigente',
+        ]);
+
+        Alvara::create([
+            'empresa_id' => $empresa->id,
+            'user_id' => $user->id,
+            'owner_id' => $user->id,
+            'tipo_alvara_id' => $tipo->id,
+            'tipo' => $tipo->nome,
+            'numero' => 'ALV-RENOVA',
+            'data_vencimento' => now()->addDays(10)->toDateString(),
+            'status' => 'proximo',
+        ]);
+
+        Alvara::create([
+            'empresa_id' => $empresa->id,
+            'user_id' => $user->id,
+            'owner_id' => $user->id,
+            'tipo_alvara_id' => $tipo->id,
+            'tipo' => $tipo->nome,
+            'numero' => 'ALV-VENCIDO',
+            'data_vencimento' => now()->subDays(5)->toDateString(),
+            'status' => 'vencido',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard', [
+            'status' => 'vigente',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('ALV-ATIVO');
+        $response->assertDontSee('ALV-RENOVA');
+        $response->assertDontSee('ALV-VENCIDO');
+        $response->assertSee('>3<', false);
+        $response->assertSee('>1<', false);
+    }
 }

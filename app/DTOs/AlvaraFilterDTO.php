@@ -34,4 +34,17 @@ class AlvaraFilterDTO
             vencimento_ate: $vencimentoAte !== '' ? $vencimentoAte : null,
         );
     }
+
+    public function withoutStatus(): self
+    {
+        return new self(
+            empresa_id: $this->empresa_id,
+            tipo_alvara_id: $this->tipo_alvara_id,
+            tipo_slug: $this->tipo_slug,
+            search: $this->search,
+            status: 'todos',
+            vencimento_de: $this->vencimento_de,
+            vencimento_ate: $this->vencimento_ate,
+        );
+    }
 }

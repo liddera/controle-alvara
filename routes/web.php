@@ -16,6 +16,8 @@ Route::get('/', function () {
         : redirect()->route('login');
 });
 
+Route::view('/landing', 'welcome')->name('landing');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/export', [DashboardController::class, 'export'])->name('dashboard.export');

@@ -2,31 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Alerts\UpsertAlertConfigAction;
+use App\Http\Requests\StoreAlertConfigRequest;
 use App\Models\AlertConfig;
 use App\Models\TipoAlvara;
 use App\Services\AlertConfigService;
-use App\Actions\Alerts\UpsertAlertConfigAction;
-use App\Http\Requests\StoreAlertConfigRequest;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Support\Facades\Gate;
+use App\Services\GoogleCalendarService;
+use App\Services\PersonalizacaoService;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 
 class AlertSettingsController extends Controller
 {
     public function __construct(
         private AlertConfigService $service,
-        private \App\Services\PersonalizacaoService $personalizacaoService
+        private PersonalizacaoService $personalizacaoService,
+        private GoogleCalendarService $googleCalendarService
     ) {}
 
     public function index(): View
     {
         $ownerId = auth()->user()->owner_id ?? auth()->id();
-        
+        $googleCalendarStatus = $this->googleCalendarService->getConnectionStatus(auth()->user());
+
         return view('profile.alerts', [
             'configs' => $this->service->listarPorUsuario(auth()->id()),
             'tiposAlvara' => TipoAlvara::all(),
             'ownerAlertEmail' => auth()->user()->email,
+            'googleCalendarStatus' => $googleCalendarStatus,
             'personalizacao' => $this->personalizacaoService->obterPorOwner($ownerId),
         ]);
     }
@@ -42,15 +46,16 @@ class AlertSettingsController extends Controller
     {
         Gate::authorize('delete', $config);
         $this->service->excluir($config);
+
         return back()->with('success', 'Alerta removido.');
     }
 
     public function readAndRedirect(DatabaseNotification $notification)
     {
         $notification->markAsRead();
-        
+
         $alvaraId = $notification->data['alvara_id'] ?? null;
-        
+
         if ($alvaraId) {
             return redirect()->route('alvaras.show', $alvaraId);
         }

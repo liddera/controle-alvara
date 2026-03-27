@@ -24,6 +24,18 @@
         </p>
     </header>
 
+    @if (session('success'))
+        <div class="mt-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <form method="post" action="{{ route('profile.alerts.store') }}" class="mt-6 space-y-6">
         @csrf
 
@@ -99,6 +111,79 @@
         </div>
     </form>
 
+    <div class="mt-10 rounded-xl border border-gray-200 bg-gradient-to-r from-amber-50 via-white to-orange-50 p-5 shadow-sm">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-md font-medium text-gray-900">Google Agenda</h3>
+                    @if ($googleCalendarStatus === \App\Services\GoogleCalendarService::STATUS_CONNECTED)
+                        <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+                            Conectado
+                        </span>
+                    @elseif ($googleCalendarStatus === \App\Services\GoogleCalendarService::STATUS_RECONNECT_REQUIRED)
+                        <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+                            Reconectar Google
+                        </span>
+                    @elseif ($googleCalendarStatus === \App\Services\GoogleCalendarService::STATUS_DISCONNECTED)
+                        <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                            Desconectado
+                        </span>
+                    @else
+                        <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+                            Indisponivel
+                        </span>
+                    @endif
+                </div>
+
+                <p class="text-sm text-gray-600">
+                    Conecte ao Google para receber alertas tambem na agenda.
+                </p>
+
+                @if ($googleCalendarStatus === \App\Services\GoogleCalendarService::STATUS_RECONNECT_REQUIRED)
+                    <p class="text-xs font-medium text-red-600">
+                        A conexao com o Google nao esta mais valida. Reconecte para voltar a criar eventos.
+                    </p>
+                @endif
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white"
+                    x-on:click.prevent="$dispatch('open-modal', 'google-calendar-info')"
+                >
+                    Info
+                </button>
+
+                @if ($googleCalendarStatus === \App\Services\GoogleCalendarService::STATUS_CONNECTED)
+                    <form method="post" action="{{ route('google.disconnect') }}">
+                        @csrf
+                        @method('delete')
+                        <button
+                            type="submit"
+                            class="inline-flex items-center rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                        >
+                            Desconectar
+                        </button>
+                    </form>
+                @else
+                    <a
+                        href="{{ route('google.redirect') }}"
+                        class="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-orange-600"
+                    >
+                        {{ $googleCalendarStatus === \App\Services\GoogleCalendarService::STATUS_RECONNECT_REQUIRED ? 'Reconectar Google' : 'Conectar com Google' }}
+                    </a>
+                @endif
+            </div>
+        </div>
+
+        @if ($googleCalendarStatus === \App\Services\GoogleCalendarService::STATUS_MISCONFIGURED)
+            <p class="mt-3 text-xs text-gray-500">
+                A integracao com Google Agenda nao esta disponivel no momento.
+            </p>
+        @endif
+    </div>
+
     <div class="mt-10">
         <h3 class="text-md font-medium text-gray-900 mb-4">Seus Alertas Ativos</h3>
         <div class="space-y-4">
@@ -137,4 +222,27 @@
             @endforelse
         </div>
     </div>
+
+    <x-modal name="google-calendar-info" maxWidth="lg" centered>
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900">Como funciona a integracao com Google Agenda</h3>
+            <p class="mt-3 text-sm leading-6 text-gray-600">
+                Quando um alerta chegar ao momento configurado, o Alvras cria um evento no seu Google Agenda usando a data de vencimento do alvara como base.
+            </p>
+            <div class="mt-4 space-y-2 text-sm text-gray-600">
+                <p>A data do evento e calculada assim: data de vencimento menos os dias de antecedencia do alerta.</p>
+                <p>O horario do evento sera fixo, das 08:00 as 09:00.</p>
+                <p>A descricao do evento leva empresa, tipo, numero do alvara e a data real de vencimento.</p>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    x-on:click.prevent="$dispatch('close-modal', 'google-calendar-info')"
+                >
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </x-modal>
 </section>

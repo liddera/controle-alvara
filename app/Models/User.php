@@ -2,23 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
-
 use Spatie\Permission\Traits\HasRoles;
-
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
-
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Auditable;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes, Auditable;
+    use Auditable, HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -32,6 +29,8 @@ class User extends Authenticatable implements FilamentUser
         'google_id',
         'google_token',
         'google_refresh_token',
+        'google_token_expires_at',
+        'google_calendar_id',
         'plan_id',
         'parent_id',
         'owner_id',
@@ -58,10 +57,16 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'google_token_expires_at' => 'datetime',
             'is_active' => 'boolean',
             'deactivated_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];
+    }
+
+    public function hasGoogleConnection(): bool
+    {
+        return filled($this->google_id) && filled($this->google_token);
     }
 
     public function auditLogs()

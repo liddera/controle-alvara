@@ -9,7 +9,7 @@
                     <th class="px-6 py-4 border-r border-gray-100 italic">CNPJ</th>
                     <th class="px-6 py-4 border-r border-gray-100 italic">Tipo</th>
                     <th class="px-6 py-4 border-r border-gray-100 italic text-center">Status</th>
-                    <th class="px-6 py-4 border-r border-gray-100 italic">Data</th>
+                    <th class="px-6 py-4 border-r border-gray-100 italic">Data de Vencimento</th>
                     <th class="px-6 py-4 text-right pr-12 italic">Ações</th>
                 </tr>
             </thead>

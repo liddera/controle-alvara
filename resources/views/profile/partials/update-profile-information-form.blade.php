@@ -6,10 +6,10 @@
             <div class="w-full max-w-md">
                 <header class="mb-4">
                     <h2 class="text-lg font-semibold text-gray-900">
-                        {{ __('Profile Information') }}
+                        {{ __('Informações do perfil') }}
                     </h2>
                     <p class="text-sm text-gray-500">
-                        {{ __("Update your account's profile information and email address.") }}
+                        {{ __('Atualize as informações da sua conta e o endereço de e-mail.') }}
                     </p>
                 </header>
 
@@ -20,14 +20,14 @@
                     @method('patch')
 
                     <div>
-                        <x-input-label for="name" :value="__('Name')" />
+                        <x-input-label for="name" :value="__('Nome')" />
                         <x-text-input id="name" name="name" type="text" class="mt-1 block w-full"
                             :value="old('name', $user->name)" required />
                         <x-input-error :messages="$errors->get('name')" />
                     </div>
 
                     <div>
-                        <x-input-label for="email" :value="__('Email')" />
+                        <x-input-label for="email" :value="__('E-mail')" />
                         <x-text-input id="email" name="email" type="email" class="mt-1 block w-full"
                             :value="old('email', $user->email)" required />
                         <x-input-error :messages="$errors->get('email')" />
@@ -35,12 +35,12 @@
 
                     <div class="flex items-center justify-between pt-4 border-t">
                         <x-primary-button>
-                            {{ __('Save') }}
+                            {{ __('Salvar') }}
                         </x-primary-button>
 
                         @if (session('status') === 'profile-updated')
                         <span class="text-sm text-gray-500">
-                            {{ __('Saved.') }}
+                            {{ __('Salvo.') }}
                         </span>
                         @endif
                     </div>

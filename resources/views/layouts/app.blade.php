@@ -60,13 +60,13 @@
             <nav class="flex-1 py-6 px-3 space-y-2">
                 <a href="{{ route('dashboard') }}"
                     class="flex items-center px-4 py-2 rounded-md font-semibold transition {{ request()->routeIs('dashboard') ? 'sidebar-active' : 'sidebar-custom-text-opacity' }}"
-                    :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Dashboard">
+                    :class="sidebarOpen ? 'justify-start' : 'justify-center'" title="Painel">
                     <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
                         </path>
                     </svg>
-                    <span x-show="sidebarOpen" x-cloak class="ml-3">Dashboard</span>
+                    <span x-show="sidebarOpen" x-cloak class="ml-3">Painel</span>
                 </a>
 
                 @unlessrole('super-admin')

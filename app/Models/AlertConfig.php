@@ -17,11 +17,13 @@ class AlertConfig extends Model
         'days_before',
         'is_active',
         'recipient_emails',
+        'recipient_phones',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'recipient_emails' => 'array',
+        'recipient_phones' => 'array',
     ];
 
     public function user(): BelongsTo

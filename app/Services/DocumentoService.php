@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Documento;
 use App\DTOs\DocumentoDTO;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 
 class DocumentoService
@@ -44,5 +45,25 @@ class DocumentoService
     {
         $disk = config('filesystems.default');
         return Storage::disk($disk)->url($documento->caminho);
+    }
+
+    public function getTemporaryUrl(Documento $documento, \DateTimeInterface $expiresAt): string
+    {
+        $diskName = config('filesystems.default');
+        $disk = Storage::disk($diskName);
+
+        try {
+            $url = $disk->temporaryUrl($documento->caminho, $expiresAt);
+
+            if (filled($url)) {
+                return $url;
+            }
+        } catch (\Throwable) {
+            // ignore and fallback to signed route
+        }
+
+        return URL::temporarySignedRoute('public.documentos.show', $expiresAt, [
+            'documento' => $documento->getKey(),
+        ]);
     }
 }

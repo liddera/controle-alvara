@@ -25,7 +25,7 @@ class EnviarAlvaraMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Envio de Alvará: '.($this->alvara->tipoAlvara?->nome ?? $this->alvara->tipo).' - '.$this->alvara->empresa->nome,
+            subject: $this->subjectLine(),
         );
     }
 
@@ -33,26 +33,54 @@ class EnviarAlvaraMail extends Mailable implements ShouldQueue
     {
         return new Content(
             view: 'emails.alvara.enviar',
-            with: [
-                'alvara' => $this->alvara,
-                'destinatarioNome' => $this->dadosFormulario['nome'] ?? 'Responsável',
-                'mensagemPersonalizada' => $this->dadosFormulario['mensagem'] ?? null,
-                'brandLogo' => $this->resolveBrandLogo(),
-            ],
+            with: $this->mailViewData(),
         );
     }
 
     public function attachments(): array
     {
         $attachments = [];
+        $disk = config('filesystems.default');
 
-        foreach ($this->alvara->documentos as $documento) {
-            $attachments[] = Attachment::fromStorageDisk('public', $documento->caminho)
-                ->as($documento->nome_arquivo)
-                ->withMime($documento->tipo);
+        foreach ($this->resolveAttachmentPayloads() as $attachment) {
+            $attachments[] = Attachment::fromStorageDisk($disk, $attachment['path'])
+                ->as($attachment['name'])
+                ->withMime($attachment['mime']);
         }
 
         return $attachments;
+    }
+
+    public function subjectLine(): string
+    {
+        return 'Envio de Alvará: '.($this->alvara->tipoAlvara?->nome ?? $this->alvara->tipo).' - '.$this->alvara->empresa->nome;
+    }
+
+    public function mailViewData(): array
+    {
+        $brandLogo = $this->resolveBrandLogo();
+
+        return [
+            'alvara' => $this->alvara,
+            'destinatarioNome' => $this->dadosFormulario['nome'] ?? 'Responsável',
+            'mensagemPersonalizada' => $this->dadosFormulario['mensagem'] ?? null,
+            'brandLogo' => $brandLogo,
+            'brandLogoDataUri' => $this->makeDataUri($brandLogo),
+        ];
+    }
+
+    /**
+     * @return array<int, array{name: string, content: string}>
+     */
+    public function attachmentsForEmailProvider(): array
+    {
+        return array_map(
+            fn (array $attachment) => [
+                'name' => $attachment['name'],
+                'content' => base64_encode($attachment['content']),
+            ],
+            $this->resolveAttachmentPayloads()
+        );
     }
 
     private function resolveBrandLogo(): ?array
@@ -78,5 +106,42 @@ class EnviarAlvaraMail extends Mailable implements ShouldQueue
             'mime' => Storage::disk($disk)->mimeType($path) ?: 'image/png',
             'name' => basename($path),
         ];
+    }
+
+    private function makeDataUri(?array $asset): ?string
+    {
+        if (! $asset || empty($asset['contents']) || empty($asset['mime'])) {
+            return null;
+        }
+
+        return sprintf(
+            'data:%s;base64,%s',
+            $asset['mime'],
+            base64_encode($asset['contents'])
+        );
+    }
+
+    /**
+     * @return array<int, array{name: string, content: string, path: string, mime: string}>
+     */
+    private function resolveAttachmentPayloads(): array
+    {
+        $attachments = [];
+        $disk = config('filesystems.default');
+
+        foreach ($this->alvara->documentos as $documento) {
+            if (! Storage::disk($disk)->exists($documento->caminho)) {
+                continue;
+            }
+
+            $attachments[] = [
+                'name' => $documento->nome_arquivo,
+                'content' => Storage::disk($disk)->get($documento->caminho),
+                'path' => $documento->caminho,
+                'mime' => $documento->tipo ?: 'application/octet-stream',
+            ];
+        }
+
+        return $attachments;
     }
 }

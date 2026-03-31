@@ -43,4 +43,20 @@ return [
         'timezone' => env('GOOGLE_CALENDAR_TIMEZONE', 'America/Porto_Velho'),
     ],
 
+    'email_provider' => [
+        'base_url' => env('EMAIL_PROVIDER_BASE_URL', 'https://api.brevo.com/v3'),
+        'api_key' => env('EMAIL_PROVIDER_API_KEY'),
+        'webhook_secret' => env('EMAIL_PROVIDER_WEBHOOK_SECRET'),
+    ],
+
+    'whatsapp_gateway' => [
+        'provider' => env('WHATSAPP_GATEWAY_PROVIDER', 'http-v2'),
+        'base_url' => env('WHATSAPP_GATEWAY_BASE_URL'),
+        'api_key' => env('WHATSAPP_GATEWAY_API_KEY'),
+        // url | base64 | auto
+        'media_mode' => env('WHATSAPP_GATEWAY_MEDIA_MODE', 'auto'),
+        'webhook_url' => env('WHATSAPP_GATEWAY_WEBHOOK_URL'),
+        'webhook_secret' => env('WHATSAPP_GATEWAY_WEBHOOK_SECRET'),
+    ],
+
 ];

@@ -11,6 +11,7 @@ class AlertConfigDTO
         public int $days_before,
         public bool $is_active = true,
         public array $recipient_emails = [],
+        public array $recipient_phones = [],
     ) {}
 
     public static function fromRequest($request): self
@@ -23,6 +24,7 @@ class AlertConfigDTO
             days_before: (int) ($data['days_before'] ?? 0),
             is_active: (bool) ($data['is_active'] ?? true),
             recipient_emails: $data['recipient_emails'] ?? [],
+            recipient_phones: $data['recipient_phones'] ?? [],
         );
     }
 
@@ -33,6 +35,7 @@ class AlertConfigDTO
             'days_before' => $this->days_before,
             'is_active' => $this->is_active,
             'recipient_emails' => $this->recipient_emails,
+            'recipient_phones' => $this->recipient_phones,
         ];
     }
 }

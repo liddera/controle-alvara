@@ -9,6 +9,7 @@ use App\Models\TipoAlvara;
 use App\Services\AlertConfigService;
 use App\Services\GoogleCalendarService;
 use App\Services\PersonalizacaoService;
+use App\Services\WhatsApp\OwnerWhatsAppInstanceService;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
@@ -18,19 +19,24 @@ class AlertSettingsController extends Controller
     public function __construct(
         private AlertConfigService $service,
         private PersonalizacaoService $personalizacaoService,
-        private GoogleCalendarService $googleCalendarService
+        private GoogleCalendarService $googleCalendarService,
+        private OwnerWhatsAppInstanceService $whatsAppInstanceService,
     ) {}
 
     public function index(): View
     {
         $ownerId = auth()->user()->owner_id ?? auth()->id();
         $googleCalendarStatus = $this->googleCalendarService->getConnectionStatus(auth()->user());
+        $whatsAppStatus = $this->whatsAppInstanceService->getConnectionStatus($ownerId);
+        $whatsAppInstance = $this->whatsAppInstanceService->findForOwner($ownerId);
 
         return view('profile.alerts', [
             'configs' => $this->service->listarPorUsuario(auth()->id()),
             'tiposAlvara' => TipoAlvara::all(),
             'ownerAlertEmail' => auth()->user()->email,
             'googleCalendarStatus' => $googleCalendarStatus,
+            'whatsAppStatus' => $whatsAppStatus,
+            'whatsAppInstance' => $whatsAppInstance,
             'personalizacao' => $this->personalizacaoService->obterPorOwner($ownerId),
         ]);
     }

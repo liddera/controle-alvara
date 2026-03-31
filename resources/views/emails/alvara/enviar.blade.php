@@ -9,7 +9,7 @@
             <td>
                 @if(!empty($brandLogo))
                     <div style="margin: 0 0 18px 0;">
-                        <img src="{{ $message->embedData($brandLogo['contents'], $brandLogo['name'], $brandLogo['mime']) }}"
+                        <img src="{{ $brandLogoDataUri ?? $message->embedData($brandLogo['contents'], $brandLogo['name'], $brandLogo['mime']) }}"
                             alt="Logo da marca"
                             style="display: block; max-height: 56px; width: auto;">
                     </div>
@@ -56,7 +56,7 @@
                         </p>
 
                         @foreach($alvara->documentos as $documento)
-                            <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($documento->caminho) }}"
+                            <a href="{{ \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($documento->caminho) }}"
                                 target="_blank"
                                 style="display: inline-block; margin: 0 10px 10px 0; padding: 12px 18px; border-radius: 12px; background: #0ea5e9; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700;">
                                 {{ $alvara->documentos->count() > 1 ? 'Baixar ' . $documento->nome_arquivo : 'Baixar documento' }}

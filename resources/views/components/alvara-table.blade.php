@@ -10,6 +10,7 @@
                     <th class="px-6 py-4 border-r border-gray-100 italic">Tipo</th>
                     <th class="px-6 py-4 border-r border-gray-100 italic text-center">Status</th>
                     <th class="px-6 py-4 border-r border-gray-100 italic">Data de Vencimento</th>
+                    <th class="px-4 py-4 border-r border-gray-100 italic w-[180px] align-top">Obs</th>
                     <th class="px-6 py-4 text-right pr-12 italic">Ações</th>
                 </tr>
             </thead>
@@ -43,6 +44,65 @@
                     <td class="px-6 py-4 border-r border-gray-100">
                         <div class="text-[#4a5568] font-medium text-[12px]">{{ $alvara->data_vencimento->format('d/m/Y') }}</div>
                     </td>
+                    <td class="px-4 py-4 border-r border-gray-100 w-[180px] max-w-[180px] whitespace-normal break-words align-top">
+                        <div x-data="alvaraObservacoesEditor({
+                            url: @js(route('alvaras.observacoes.update', $alvara)),
+                            initial: @js($alvara->observacoes),
+                        })">
+                            <template x-if="!editing">
+                                <div class="flex items-start gap-2">
+                                    <button
+                                        type="button"
+                                        class="min-w-0 flex-1 text-[12px] font-semibold text-gray-700 truncate hover:text-gray-900 transition text-left"
+                                        :title="value || ''"
+                                        @click="startEdit()"
+                                    >
+                                        <span x-text="previewText()"></span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="shrink-0 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition"
+                                        @click="startEdit()"
+                                        title="Editar observações"
+                                    >
+                                        Editar
+                                    </button>
+                                </div>
+                            </template>
+
+                            <template x-if="editing">
+                                <div>
+                                    <textarea
+                                        x-ref="textarea"
+                                        class="w-full text-[12px] font-semibold border border-gray-200 rounded-md px-2 py-1 focus:ring-orange-500 focus:border-orange-500"
+                                        rows="3"
+                                        x-model="draft"
+                                        @keydown.escape.prevent="cancel()"
+                                    ></textarea>
+                                    <div class="mt-1 flex items-center justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            class="text-[10px] font-semibold text-gray-600 hover:text-gray-800 transition"
+                                            @click="cancel()"
+                                            :disabled="saving"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="text-[10px] font-semibold text-orange-600 hover:text-orange-700 transition"
+                                            @click="save()"
+                                            :disabled="saving"
+                                        >
+                                            <span x-show="!saving">Salvar</span>
+                                            <span x-show="saving">Salvando...</span>
+                                        </button>
+                                    </div>
+                                    <div x-show="error" class="mt-1 text-[10px] text-red-600" x-text="error"></div>
+                                </div>
+                            </template>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 text-right pr-8">
                         <div class="flex items-center justify-end gap-3 text-[#5a67d8]">
                             {{-- View --}}
@@ -50,20 +110,47 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                             </a>
                             @php
+                                $dispatchHistorico = $alvara->documentDispatches->map(function($dispatch) {
+                                    $destination = $dispatch->destination_name
+                                        ?: $dispatch->destination_email
+                                        ?: $dispatch->destination_phone
+                                        ?: 'Desconhecido';
+
+                                    return [
+                                        'data' => optional($dispatch->requested_at ?: $dispatch->created_at)->format('d/m/Y H:i'),
+                                        'ts' => optional($dispatch->requested_at ?: $dispatch->created_at)?->timestamp ?? 0,
+                                        'destinatario' => $destination,
+                                        'metodo' => $dispatch->channel,
+                                        'status' => $dispatch->current_status,
+                                    ];
+                                })->values()->all();
+
+                                $legacyHistorico = $alvara->notificacoes->map(function($n) {
+                                    $msg = json_decode($n->mensagem, true) ?? [];
+                                    $metodo = $msg['metodo'] ?? 'email';
+                                    if ($metodo === 'email' && ($msg['whatsapp_aviso'] ?? false)) {
+                                        $metodo = 'email+whatsapp';
+                                    }
+                                    return [
+                                        'data' => $n->created_at->format('d/m/Y H:i'),
+                                        'ts' => $n->created_at->timestamp,
+                                        'destinatario' => $msg['destinatario_nome'] ?? 'Desconhecido',
+                                        'metodo' => $metodo
+                                    ];
+                                })->values()->all();
+
+                                $mergedHistorico = array_merge($dispatchHistorico, $legacyHistorico);
+                                usort($mergedHistorico, function ($left, $right) {
+                                    return ($right['ts'] ?? 0) <=> ($left['ts'] ?? 0);
+                                });
+
                                 $modalData = [
                                     'id' => $alvara->id,
                                     'empresa' => $alvara->empresa->nome,
                                     'nome' => $alvara->empresa->responsavel,
                                     'email' => $alvara->empresa->email,
                                     'telefone' => $alvara->empresa->telefone,
-                                    'historico' => $alvara->notificacoes->map(function($n) {
-                                        $msg = json_decode($n->mensagem, true) ?? [];
-                                        return [
-                                            'data' => $n->created_at->format('d/m/Y H:i'),
-                                            'destinatario' => $msg['destinatario_nome'] ?? 'Desconhecido',
-                                            'metodo' => $msg['metodo'] ?? 'email'
-                                        ];
-                                    })->values()->all()
+                                    'historico' => $mergedHistorico,
                                 ];
                             @endphp
                             <button type="button" 
@@ -87,7 +174,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 italic">
+                    <td colspan="7" class="px-6 py-12 text-center text-gray-500 italic">
                         Nenhum alvará encontrado para os filtros selecionados.
                     </td>
                 </tr>
@@ -160,24 +247,43 @@
                             </div>
                         </div>
 
-                        <!-- Telefone -->
-                        <div>
-                            <label for="telefone" class="block text-sm font-medium text-gray-700">Telefone / WhatsApp</label>
-                            <input type="text" x-model="form.telefone" id="telefone" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
+                        <!-- Aviso por WhatsApp (opcional) -->
+                        <div class="rounded-md border border-gray-200 bg-gray-50 p-3">
+                            <label class="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    x-model="form.enviar_aviso_whatsapp"
+                                    x-on:change="onToggleWhatsAppAviso()"
+                                    class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                >
+                                <span class="text-sm font-medium text-gray-800">
+                                    Enviar aviso no WhatsApp (opcional)
+                                </span>
+                            </label>
+                            <p class="mt-1 text-xs text-gray-600">
+                                O documento é enviado por <strong>e-mail</strong>. Se marcado, enviamos apenas uma mensagem no WhatsApp avisando que o alvará foi enviado por e-mail.
+                            </p>
 
-                        <!-- Opções de Envio -->
-                        <div>
-                            <span class="block text-sm font-medium text-gray-700 mb-2">Método de Envio</span>
-                            <div class="flex gap-4">
-                                <label class="flex items-center">
-                                    <input type="radio" x-model="form.metodo" value="email" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
-                                    <span class="ml-2 text-sm text-gray-700">E-mail</span>
+                            <div class="mt-3" x-show="form.enviar_aviso_whatsapp" x-transition>
+                                <label for="telefone" class="block text-sm font-medium text-gray-700">
+                                    Telefone (WhatsApp) para aviso
                                 </label>
-                                <label class="flex items-center opacity-50 cursor-not-allowed" title="Em breve">
-                                    <input type="radio" value="whatsapp" disabled class="focus:ring-green-500 h-4 w-4 text-green-600 border-gray-300 cursor-not-allowed">
-                                    <span class="ml-2 text-sm text-gray-700">WhatsApp <span class="text-xs text-gray-500">(Em breve)</span></span>
-                                </label>
+                                <input
+                                    type="text"
+                                    x-model="telefoneDisplay"
+                                    x-on:input="onTelefoneInput($event)"
+                                    id="telefone"
+                                    inputmode="numeric"
+                                    placeholder="Ex: +55 (69) 99999-9999"
+                                    class="mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    :class="telefoneError ? 'border-red-300' : 'border-gray-300'"
+                                >
+                                <p class="mt-1 text-[11px] text-gray-500">
+                                    Formato BR: <span class="font-mono">+55 (DD) 9XXXX-XXXX</span>. Se deixar em branco, usaremos o telefone cadastrado da empresa (se houver).
+                                </p>
+                                <template x-if="telefoneError">
+                                    <p class="mt-1 text-[11px] text-red-600" x-text="telefoneError"></p>
+                                </template>
                             </div>
                         </div>
 
@@ -213,8 +319,16 @@
                                             <span class="font-semibold text-gray-700" x-text="hist.data"></span> -
                                             <span class="text-gray-600" x-text="hist.destinatario"></span>
                                         </div>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 uppercase" x-text="hist.metodo">
-                                        </span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 uppercase" x-text="hist.metodo">
+                                            </span>
+                                            <template x-if="hist.status">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase"
+                                                    :class="statusClass(hist.status)"
+                                                    x-text="hist.status">
+                                                </span>
+                                            </template>
+                                        </div>
                                     </li>
                                 </template>
                             </ul>
@@ -228,12 +342,72 @@
 </div>
 
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('alvaraSendModal', () => ({
-        open: false,
-        loading: false,
-        successMessage: '',
-        errorMessage: '',
+	document.addEventListener('alpine:init', () => {
+	    Alpine.data('alvaraObservacoesEditor', ({ url, initial }) => ({
+	        url,
+	        value: initial || '',
+	        draft: initial || '',
+	        editing: false,
+	        saving: false,
+	        error: '',
+
+	        previewText() {
+	            const text = (this.value || '').trim();
+	            if (!text) return '—';
+	            const max = 60;
+	            return text.length > max ? text.slice(0, max - 1) + '…' : text;
+	        },
+
+	        startEdit() {
+	            this.draft = this.value || '';
+	            this.error = '';
+	            this.editing = true;
+	            this.$nextTick(() => this.$refs.textarea?.focus());
+	        },
+
+	        cancel() {
+	            this.editing = false;
+	            this.saving = false;
+	            this.error = '';
+	        },
+
+	        async save() {
+	            this.saving = true;
+	            this.error = '';
+
+	            try {
+	                const response = await fetch(this.url, {
+	                    method: 'PATCH',
+	                    headers: {
+	                        'Content-Type': 'application/json',
+	                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+	                        'Accept': 'application/json',
+	                    },
+	                    body: JSON.stringify({ observacoes: this.draft }),
+	                });
+
+	                const data = await response.json();
+	                if (!response.ok || !data.success) {
+	                    this.error = data?.message || 'Não foi possível salvar.';
+	                    this.saving = false;
+	                    return;
+	                }
+
+	                this.value = data.observacoes || '';
+	                this.editing = false;
+	                this.saving = false;
+	            } catch (e) {
+	                this.error = 'Falha na comunicação com o servidor.';
+	                this.saving = false;
+	            }
+	        },
+	    }));
+
+	    Alpine.data('alvaraSendModal', () => ({
+	        open: false,
+	        loading: false,
+	        successMessage: '',
+	        errorMessage: '',
         alvara: {
             id: null,
             empresa: '',
@@ -242,9 +416,12 @@ document.addEventListener('alpine:init', () => {
             nome: '',
             email: '',
             telefone: '',
-            metodo: 'email',
+            enviar_aviso_whatsapp: false,
             mensagem: ''
         },
+        telefoneDisplay: '',
+        telefoneError: '',
+        empresaTelefoneDigits: '',
         historico: [],
         
         openModal(data) {
@@ -252,19 +429,139 @@ document.addEventListener('alpine:init', () => {
             this.alvara.empresa = data.empresa;
             this.form.nome = data.nome;
             this.form.email = data.email;
-            this.form.telefone = data.telefone;
-            this.form.metodo = 'email';
+            this.empresaTelefoneDigits = this.digitsOnly(data.telefone || '');
+            this.form.telefone = this.empresaTelefoneDigits;
+            this.telefoneDisplay = this.formatTelefoneBr(this.form.telefone);
+            this.telefoneError = '';
+            this.form.enviar_aviso_whatsapp = false;
             this.form.mensagem = '';
-            this.historico = data.historico || [];
+            this.historico = (data.historico || []).sort((a, b) => (b.ts || 0) - (a.ts || 0));
             this.successMessage = '';
             this.errorMessage = '';
             this.open = true;
+        },
+
+        onToggleWhatsAppAviso() {
+            this.telefoneError = '';
+
+            if (this.form.enviar_aviso_whatsapp) {
+                if (!this.form.telefone && this.empresaTelefoneDigits) {
+                    this.form.telefone = this.empresaTelefoneDigits;
+                }
+                this.telefoneDisplay = this.formatTelefoneBr(this.form.telefone || '');
+                return;
+            }
+
+            // quando desmarcar, mantém o valor digitado no form (digits), só limpa UI de erro
+        },
+
+        onTelefoneInput(event) {
+            const raw = event?.target?.value || '';
+            const digits = this.digitsOnly(raw);
+
+            this.form.telefone = digits;
+            this.telefoneDisplay = this.formatTelefoneBr(digits);
+
+            if (!digits) {
+                this.telefoneError = '';
+                return;
+            }
+
+            this.telefoneError = this.validateTelefoneBr(digits);
+        },
+
+        digitsOnly(value) {
+            return String(value || '').replace(/\D+/g, '');
+        },
+
+        validateTelefoneBr(digits) {
+            // 55 + DDD (2..9) + número (8 ou 9 dígitos)
+            if (!/^55[1-9]{2}\d{8,9}$/.test(digits)) {
+                return 'Número inválido. Use DDI+DDD+número (ex.: 5569999999999).';
+            }
+
+            return '';
+        },
+
+        formatTelefoneBr(digits) {
+            const d = this.digitsOnly(digits);
+
+            if (!d) return '';
+
+            if (!d.startsWith('55')) {
+                return d;
+            }
+
+            const ddi = d.slice(0, 2);
+            const ddd = d.slice(2, 4);
+            const rest = d.slice(4);
+
+            if (rest.length <= 4) {
+                return `+${ddi} (${ddd}) ${rest}`;
+            }
+
+            if (rest.length <= 8) {
+                const p1 = rest.slice(0, 4);
+                const p2 = rest.slice(4);
+                return `+${ddi} (${ddd}) ${p1}${p2 ? '-' + p2 : ''}`;
+            }
+
+            // 9 dígitos (celular): 5-4
+            const p1 = rest.slice(0, 5);
+            const p2 = rest.slice(5, 9);
+            return `+${ddi} (${ddd}) ${p1}${p2 ? '-' + p2 : ''}`;
+        },
+
+        statusClass(status) {
+            const normalized = String(status || '').toLowerCase();
+
+            if (normalized === 'enviando') {
+                return 'bg-amber-100 text-amber-800';
+            }
+
+            if (normalized === 'enviado') {
+                return 'bg-blue-100 text-blue-800';
+            }
+
+            if (normalized === 'recebido') {
+                return 'bg-green-100 text-green-800';
+            }
+
+            if (normalized === 'aberto') {
+                return 'bg-cyan-100 text-cyan-800';
+            }
+
+            if (normalized === 'falhou') {
+                return 'bg-red-100 text-red-800';
+            }
+
+            if (normalized === 'parcial') {
+                return 'bg-orange-100 text-orange-800';
+            }
+
+            return 'bg-gray-100 text-gray-700';
         },
         
         submit() {
             if (!this.form.email) {
                 this.errorMessage = 'O e-mail é obrigatório.';
                 return;
+            }
+
+            if (this.form.enviar_aviso_whatsapp) {
+                // se o usuário não digitar nada, usamos o telefone cadastrado da empresa (se houver)
+                if (!this.form.telefone && this.empresaTelefoneDigits) {
+                    this.form.telefone = this.empresaTelefoneDigits;
+                    this.telefoneDisplay = this.formatTelefoneBr(this.form.telefone);
+                }
+
+                if (this.form.telefone) {
+                    this.telefoneError = this.validateTelefoneBr(this.form.telefone);
+                    if (this.telefoneError) {
+                        this.errorMessage = this.telefoneError;
+                        return;
+                    }
+                }
             }
             this.loading = true;
             this.errorMessage = '';

@@ -10,6 +10,7 @@ use App\DTOs\AlvaraFilterDTO;
 use App\Http\Requests\FilterAlvaraRequest;
 use App\Http\Requests\StoreAlvaraRequest;
 use App\Http\Requests\UpdateAlvaraRequest;
+use App\Http\Requests\UpdateAlvaraObservacoesRequest;
 use App\Actions\Alvaras\CriarAlvaraAction;
 use App\Actions\Alvaras\AtualizarAlvaraAction;
 use App\Actions\Alvaras\ExcluirAlvaraAction;
@@ -26,7 +27,9 @@ class AlvaraController extends Controller
         $alvaras = Alvara::with([
             'empresa', 
             'tipoAlvara', 
-            'notificacoes' => fn($q) => $q->where('tipo', 'envio_documento')->latest()
+            'notificacoes' => fn($q) => $q->where('tipo', 'envio_documento')->latest(),
+            'documentDispatches' => fn($q) => $q->latest(),
+            'documentDispatches.messages',
         ])
             ->filterByDto($dto)
             ->latest()
@@ -115,28 +118,80 @@ class AlvaraController extends Controller
         return redirect()->route('alvaras.index')->with('success', 'Alvará removido com sucesso!');
     }
 
+    public function updateObservacoes(UpdateAlvaraObservacoesRequest $request, Alvara $alvara)
+    {
+        $alvara->update([
+            'observacoes' => $request->validated('observacoes'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'observacoes' => $alvara->observacoes,
+        ]);
+    }
+
     public function enviarEmail(Request $request, Alvara $alvara, \App\Actions\Alvaras\EnviarAlvaraPorEmailAction $action)
     {
         $request->validate([
             'email' => 'required|email',
             'nome' => 'nullable|string|max:255',
             'telefone' => 'nullable|string|max:20',
+            'enviar_aviso_whatsapp' => 'nullable|boolean',
             'mensagem' => 'nullable|string',
-            'metodo' => 'nullable|string|in:email,whatsapp'
         ]);
 
         try {
-            $notificacao = $action->execute($alvara, $request->only(['nome', 'email', 'telefone', 'mensagem', 'metodo']));
+            $notificacao = $action->execute($alvara, $request->only(['nome', 'email', 'telefone', 'enviar_aviso_whatsapp', 'mensagem']));
+            $msg = json_decode($notificacao->mensagem, true) ?? [];
+            $metodo = ($msg['whatsapp_aviso'] ?? false) ? 'email+whatsapp' : 'email';
+            $dispatchId = $msg['dispatch_id'] ?? null;
+            $dispatchStatus = $msg['dispatch_status'] ?? null;
             
             return response()->json([
                 'success' => true,
-                'message' => 'Alvará enviado por email com sucesso!',
+                'message' => 'Envio iniciado! O e-mail será enviado e, se marcado, o aviso no WhatsApp será disparado após o envio do e-mail.',
                 'historico' => [
                     'id' => $notificacao->id,
                     'data' => $notificacao->created_at->format('d/m/Y H:i'),
-                    'destinatario' => json_decode($notificacao->mensagem)->destinatario_nome ?? 'Desconhecido',
-                    'metodo' => json_decode($notificacao->mensagem)->metodo ?? 'email',
+                    'ts' => $notificacao->created_at->timestamp,
+                    'destinatario' => $msg['destinatario_nome'] ?? 'Desconhecido',
+                    'metodo' => $metodo,
+                    'status' => $dispatchStatus,
+                    'dispatch_id' => $dispatchId,
                 ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function enviarWhatsApp(Request $request, Alvara $alvara, \App\Actions\Alvaras\EnviarAlvaraPorWhatsAppAction $action)
+    {
+        $request->validate([
+            'telefone' => 'required|string|max:20',
+            'nome' => 'nullable|string|max:255',
+            'mensagem' => 'nullable|string',
+        ]);
+
+        try {
+            $notificacao = $action->execute($alvara, $request->only(['nome', 'telefone', 'mensagem']));
+            $msg = json_decode($notificacao->mensagem, true) ?? [];
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Envio iniciado! As mensagens serao enviadas pelo WhatsApp.',
+                'historico' => [
+                    'id' => $notificacao->id,
+                    'data' => $notificacao->created_at->format('d/m/Y H:i'),
+                    'ts' => $notificacao->created_at->timestamp,
+                    'destinatario' => $msg['destinatario_nome'] ?? 'Desconhecido',
+                    'metodo' => 'whatsapp',
+                    'status' => $msg['dispatch_status'] ?? null,
+                    'dispatch_id' => $msg['dispatch_id'] ?? null,
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([

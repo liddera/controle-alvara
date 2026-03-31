@@ -94,6 +94,16 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Notificacao::class);
     }
 
+    public function ownedDocumentDispatches()
+    {
+        return $this->hasMany(DocumentDispatch::class, 'owner_id');
+    }
+
+    public function requestedDocumentDispatches()
+    {
+        return $this->hasMany(DocumentDispatch::class, 'requested_by_user_id');
+    }
+
     public function plan()
     {
         return $this->belongsTo(Plan::class);

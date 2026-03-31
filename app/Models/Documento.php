@@ -21,6 +21,11 @@ class Documento extends Model
         return $this->belongsTo(Alvara::class);
     }
 
+    public function dispatchMessages()
+    {
+        return $this->hasMany(DocumentDispatchMessage::class);
+    }
+
     /**
      * Get the public URL for the document.
      */

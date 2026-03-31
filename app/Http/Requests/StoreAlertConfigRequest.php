@@ -26,6 +26,8 @@ class StoreAlertConfigRequest extends FormRequest
             'days_before' => ['required', 'integer', 'min:0', 'max:365'],
             'recipient_emails' => ['nullable', 'array', 'max:10'],
             'recipient_emails.*' => ['required', 'string', 'email', 'max:255', 'distinct'],
+            'recipient_phones' => ['nullable', 'array', 'max:10'],
+            'recipient_phones.*' => ['required', 'string', 'regex:/^[0-9]{8,15}$/', 'distinct'],
         ];
     }
 
@@ -38,8 +40,25 @@ class StoreAlertConfigRequest extends FormRequest
             ->values()
             ->all();
 
+        $recipientPhones = collect($this->input('recipient_phones', []))
+            ->filter(fn ($phone) => filled($phone))
+            ->map(function ($phone) {
+                $normalized = preg_replace('/\D+/', '', (string) $phone);
+
+                if (str_starts_with($normalized, '00')) {
+                    $normalized = substr($normalized, 2);
+                }
+
+                return $normalized;
+            })
+            ->filter(fn ($phone) => filled($phone))
+            ->unique()
+            ->values()
+            ->all();
+
         $this->merge([
             'recipient_emails' => $recipientEmails,
+            'recipient_phones' => $recipientPhones,
         ]);
     }
 }

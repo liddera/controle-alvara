@@ -54,6 +54,11 @@ class Alvara extends Model
         return $this->hasMany(Notificacao::class);
     }
 
+    public function documentDispatches()
+    {
+        return $this->hasMany(DocumentDispatch::class);
+    }
+
     public function tipoAlvara()
     {
         return $this->belongsTo(TipoAlvara::class, 'tipo_alvara_id');

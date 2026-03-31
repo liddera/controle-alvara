@@ -4,29 +4,26 @@ namespace App\Actions\Alvaras;
 
 use App\Models\Alvara;
 use App\Models\Notificacao;
-use App\Mail\EnviarAlvaraMail;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
+use App\Jobs\Alvaras\SendAlvaraEmailAndNotifyWhatsAppJob;
+use App\Services\Dispatch\DocumentDispatchService;
 
 class EnviarAlvaraPorEmailAction
 {
+    public function __construct(
+        private readonly DocumentDispatchService $documentDispatchService,
+    ) {}
+
     /**
      * @param Alvara $alvara
-     * @param array $dados ['nome', 'email', 'telefone', 'mensagem', 'metodo']
+     * @param array $dados ['nome', 'email', 'telefone', 'mensagem', 'enviar_aviso_whatsapp']
      * @return Notificacao
      */
     public function execute(Alvara $alvara, array $dados): Notificacao
     {
-        // Disparar email
-        try {
-            Mail::to($dados['email'])->send(new EnviarAlvaraMail($alvara, $dados));
-        } catch (\Exception $e) {
-            Log::error('Erro ao enviar alvara por email: ' . $e->getMessage());
-            throw new \Exception('Falha no envio do email. Verifique as configurações de servidor ou o anexo.');
-        }
+        $ownerId = (int) ($alvara->owner_id ?? 0);
 
         // Registrar histórico no model de Notificacao
-        return Notificacao::create([
+        $notificacao = Notificacao::create([
             'user_id' => auth()->id() ?? $alvara->user_id,
             'alvara_id' => $alvara->id,
             'tipo' => 'envio_documento', // Chave p/ identificar e filtrar depois
@@ -34,12 +31,36 @@ class EnviarAlvaraPorEmailAction
                 'destinatario_nome' => $dados['nome'] ?? 'Sem Nome',
                 'destinatario_email' => $dados['email'],
                 'destinatario_telefone' => $dados['telefone'] ?? null,
-                'metodo' => $dados['metodo'] ?? 'email',
+                'metodo' => 'email',
+                'whatsapp_aviso' => (bool) ($dados['enviar_aviso_whatsapp'] ?? false),
                 'mensagem_personalizada' => $dados['mensagem'] ?? null,
-                'remetente_nome' => auth()->user()->name ?? 'Sistema'
+                'remetente_nome' => auth()->user()->name ?? 'Sistema',
             ]),
             'lida' => true,
             'data_envio' => now(),
         ]);
+
+        [$dispatch, $dispatchMessage] = $this->documentDispatchService->createEmailDispatch(
+            alvara: $alvara->loadMissing('documentos'),
+            dados: $dados,
+            requestedByUserId: auth()->id() ?? $alvara->user_id,
+            notificacaoId: (int) $notificacao->getKey(),
+        );
+
+        SendAlvaraEmailAndNotifyWhatsAppJob::dispatch(
+            alvaraId: (int) $alvara->getKey(),
+            dados: $dados,
+            ownerId: $ownerId,
+            dispatchId: (int) $dispatch->getKey(),
+            dispatchMessageId: (int) $dispatchMessage->getKey(),
+        );
+
+        $payload = json_decode($notificacao->mensagem, true) ?? [];
+        $payload['dispatch_id'] = (int) $dispatch->getKey();
+        $payload['dispatch_status'] = $dispatch->current_status;
+        $notificacao->mensagem = json_encode($payload);
+        $notificacao->save();
+
+        return $notificacao;
     }
 }

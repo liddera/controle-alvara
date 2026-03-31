@@ -18,7 +18,9 @@ class AlertConfigService
 
     public function salvar(int $userId, AlertConfigDTO $dto): AlertConfig
     {
-        $primaryEmail = User::query()->whereKey($userId)->value('email');
+        $user = User::query()->select(['id', 'email', 'owner_id'])->whereKey($userId)->first();
+        $primaryEmail = $user?->email;
+        $ownerId = $user?->owner_id ?: $userId;
 
         $recipientEmails = collect($dto->recipient_emails)
             ->filter(fn ($email) => filled($email))
@@ -28,11 +30,29 @@ class AlertConfigService
             ->values()
             ->all();
 
+        $recipientPhones = collect($dto->recipient_phones)
+            ->filter(fn ($phone) => filled($phone))
+            ->map(function ($phone) {
+                $normalized = preg_replace('/\D+/', '', (string) $phone);
+
+                if (str_starts_with($normalized, '00')) {
+                    $normalized = substr($normalized, 2);
+                }
+
+                return $normalized;
+            })
+            ->filter(fn ($phone) => filled($phone))
+            ->unique()
+            ->values()
+            ->all();
+
         $payload = $dto->toArray();
         $payload['recipient_emails'] = $recipientEmails;
+        $payload['recipient_phones'] = $recipientPhones;
 
         return AlertConfig::updateOrCreate(
             [
+                'owner_id' => $ownerId,
                 'user_id' => $userId,
                 'tipo_alvara_id' => $dto->tipo_alvara_id,
                 'days_before' => $dto->days_before,

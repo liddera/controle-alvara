@@ -4,8 +4,11 @@ namespace App\Console\Commands;
 
 use App\Models\AlertConfig;
 use App\Models\Alvara;
+use App\Models\WhatsAppInstance;
 use App\Notifications\VencimentoAlvaraNotification;
 use App\Services\GoogleCalendarService;
+use App\Services\WhatsApp\WhatsAppAlertMessageFactory;
+use App\Services\WhatsApp\WhatsAppOutboxService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Notification;
@@ -16,7 +19,11 @@ class ProcessAlvaraAlerts extends Command
 
     protected $description = 'Processa e envia alertas de vencimento de alvarás baseados nas configurações dos usuários';
 
-    public function handle(GoogleCalendarService $googleCalendarService)
+    public function handle(
+        GoogleCalendarService $googleCalendarService,
+        WhatsAppOutboxService $whatsAppOutboxService,
+        WhatsAppAlertMessageFactory $whatsAppAlertMessageFactory,
+    )
     {
         $this->info('Iniciando processamento de alertas...');
 
@@ -51,6 +58,19 @@ class ProcessAlvaraAlerts extends Command
                 ->unique()
                 ->values();
 
+            $recipientPhones = collect($config->recipient_phones ?? [])
+                ->filter(fn ($phone) => filled($phone))
+                ->map(fn ($phone) => preg_replace('/\D+/', '', (string) $phone))
+                ->map(fn ($phone) => str_starts_with($phone, '00') ? substr($phone, 2) : $phone)
+                ->filter(fn ($phone) => filled($phone))
+                ->unique()
+                ->values();
+
+            $whatsAppInstance = WhatsAppInstance::query()
+                ->where('owner_id', $config->owner_id)
+                ->where('status', 'open')
+                ->first();
+
             foreach ($alvaras as $alvara) {
                 // Notificamos o usuário da configuração
                 $config->user->notify(new VencimentoAlvaraNotification($alvara, $config->days_before));
@@ -72,6 +92,21 @@ class ProcessAlvaraAlerts extends Command
                         ->notify(new VencimentoAlvaraNotification($alvara, $config->days_before));
 
                     $this->line("Notificação adicional enviada para {$email} sobre o alvará {$alvara->numero} ({$config->days_before} dias antes)");
+                }
+
+                if ($whatsAppInstance && $recipientPhones->isNotEmpty()) {
+                    $text = $whatsAppAlertMessageFactory->makeVencimentoMessage($alvara, $config->days_before);
+
+                    foreach ($recipientPhones as $phone) {
+                        $whatsAppOutboxService->queueText(
+                            ownerId: $config->owner_id,
+                            instanceKey: $whatsAppInstance->instance_key,
+                            to: $phone,
+                            text: $text,
+                        );
+
+                        $this->line("WhatsApp enfileirado para {$phone} sobre o alvará {$alvara->numero} ({$config->days_before} dias antes)");
+                    }
                 }
             }
         }

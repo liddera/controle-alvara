@@ -1,13 +1,27 @@
 @php
     $initialRecipientEmails = old('recipient_emails', []);
+    $initialRecipientPhones = old('recipient_phones', []);
 
     if (!is_array($initialRecipientEmails)) {
         $initialRecipientEmails = [];
     }
 
+    if (!is_array($initialRecipientPhones)) {
+        $initialRecipientPhones = [];
+    }
+
     $initialRecipientEmails = collect($initialRecipientEmails)
         ->filter(fn ($email) => filled($email))
         ->map(fn ($email) => strtolower(trim((string) $email)))
+        ->unique()
+        ->values()
+        ->all();
+
+    $initialRecipientPhones = collect($initialRecipientPhones)
+        ->filter(fn ($phone) => filled($phone))
+        ->map(fn ($phone) => preg_replace('/\D+/', '', (string) $phone))
+        ->map(fn ($phone) => str_starts_with($phone, '00') ? substr($phone, 2) : $phone)
+        ->filter(fn ($phone) => filled($phone))
         ->unique()
         ->values()
         ->all();
@@ -106,6 +120,49 @@
             <x-input-error class="mt-2" :messages="$errors->get('recipient_emails.*')" />
         </div>
 
+        <div x-data="alertPhones(@js($initialRecipientPhones))">
+            <x-input-label for="recipient_phone_input" :value="__('Destinatários WhatsApp (Telefones)')" />
+            <p class="text-xs text-gray-500 mt-1">
+                Adicione os telefones que devem receber o alerta via WhatsApp (apenas dígitos, com DDI + DDD).
+            </p>
+
+            <div class="mt-3 flex flex-wrap gap-2">
+                <template x-for="phone in recipients" :key="phone">
+                    <span class="inline-flex items-center rounded-full bg-gray-100 text-gray-800 text-xs px-3 py-1">
+                        <span x-text="phone"></span>
+                        <button type="button" class="ml-2 text-gray-500 hover:text-gray-700" @click="removeRecipient(phone)">
+                            x
+                        </button>
+                    </span>
+                </template>
+            </div>
+
+            <div class="mt-3 flex items-center gap-2">
+                <input
+                    id="recipient_phone_input"
+                    x-model="newPhone"
+                    @keydown.enter.prevent="addRecipient()"
+                    type="tel"
+                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 text-sm"
+                    placeholder="Ex: 5599999999999"
+                />
+                <button
+                    type="button"
+                    @click="addRecipient()"
+                    class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                    Adicionar
+                </button>
+            </div>
+
+            <template x-for="phone in recipients" :key="`hidden-phone-${phone}`">
+                <input type="hidden" name="recipient_phones[]" :value="phone">
+            </template>
+
+            <x-input-error class="mt-2" :messages="$errors->get('recipient_phones')" />
+            <x-input-error class="mt-2" :messages="$errors->get('recipient_phones.*')" />
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Adicionar Alerta') }}</x-primary-button>
         </div>
@@ -184,6 +241,151 @@
         @endif
     </div>
 
+    <div class="mt-6 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50 via-white to-emerald-50 p-5 shadow-sm">
+        <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-md font-medium text-gray-900">WhatsApp</h3>
+
+                    @if ($whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_CONNECTED)
+                        <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+                            Conectado
+                        </span>
+                    @elseif ($whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_CONNECTING)
+                        <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                            Aguardando conexao
+                        </span>
+                    @elseif ($whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_MISCONFIGURED)
+                        <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+                            Indisponivel
+                        </span>
+                    @else
+                        <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+                            Desconectado
+                        </span>
+                    @endif
+                </div>
+
+                <p class="text-sm text-gray-600">
+                    Conecte o WhatsApp do seu cliente para enviar alertas e documentos.
+                </p>
+
+                @if ($whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_MISCONFIGURED)
+                    <p class="text-xs text-gray-500">
+                        A integracao com WhatsApp nao esta disponivel no momento.
+                    </p>
+                @endif
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white"
+                    x-on:click.prevent="$dispatch('open-modal', 'whatsapp-info')"
+                >
+                    Info
+                </button>
+
+                <form method="post" action="{{ route('whatsapp.refresh') }}">
+                    @csrf
+                    <button
+                        type="submit"
+                        class="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white"
+                    >
+                        Atualizar Status
+                    </button>
+                </form>
+
+                @if ($whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_CONNECTED)
+                    <form method="post" action="{{ route('whatsapp.disconnect') }}">
+                        @csrf
+                        @method('delete')
+                        <button
+                            type="submit"
+                            class="inline-flex items-center rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                        >
+                            Desconectar
+                        </button>
+                    </form>
+                @elseif ($whatsAppStatus !== \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_MISCONFIGURED)
+                    <form method="post" action="{{ route('whatsapp.connect') }}">
+                        @csrf
+                        <button
+                            type="submit"
+                            class="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+                        >
+                            Gerar QR Code
+                        </button>
+                    </form>
+                @endif
+            </div>
+        </div>
+
+        @if ($whatsAppStatus !== \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_CONNECTED && $whatsAppStatus !== \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_MISCONFIGURED)
+            <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="rounded-lg border border-gray-200 bg-white p-4">
+                    <div class="text-sm font-semibold text-gray-900">QR Code</div>
+                    <p class="mt-1 text-xs text-gray-500">
+                        Ao clicar em "Gerar QR Code", aguarde alguns segundos. Se o QR nao aparecer, clique em "Atualizar Status".
+                    </p>
+
+                    @if (filled($whatsAppInstance?->last_qr_code_base64))
+                        <div class="mt-3 flex justify-center">
+                            <img
+                                alt="QR Code WhatsApp"
+                                class="h-48 w-48 rounded-md border border-gray-200 bg-white p-2"
+                                src="data:image/png;base64,{{ $whatsAppInstance->last_qr_code_base64 }}"
+                            />
+                        </div>
+                    @elseif (filled($whatsAppInstance?->last_qr_code_payload))
+                        <div class="mt-3 space-y-3">
+                            @if (app()->environment('local'))
+                                <div class="flex justify-center">
+                                    <img
+                                        alt="QR Code WhatsApp (dev)"
+                                        class="h-48 w-48 rounded-md border border-gray-200 bg-white p-2"
+                                        src="https://api.qrserver.com/v1/create-qr-code/?size=192x192&data={{ urlencode($whatsAppInstance->last_qr_code_payload) }}"
+                                    />
+                                </div>
+                                <p class="text-[10px] text-gray-500">
+                                    Dev: este QR e gerado por um servico externo apenas para facilitar testes locais sem webhook.
+                                </p>
+                            @endif
+
+                            <details class="rounded-md border border-gray-200 bg-gray-50 p-3">
+                                <summary class="cursor-pointer text-xs font-medium text-gray-700">Ver payload do QR</summary>
+                                <div class="mt-2 break-all font-mono text-[10px] text-gray-700">
+                                    {{ $whatsAppInstance->last_qr_code_payload }}
+                                </div>
+                            </details>
+                        </div>
+                    @else
+                        <div class="mt-3 text-xs text-gray-500 italic">
+                            QR code ainda nao foi recebido.
+                        </div>
+                    @endif
+                </div>
+
+                <div class="rounded-lg border border-gray-200 bg-white p-4">
+                    <div class="text-sm font-semibold text-gray-900">Codigo de Pareamento</div>
+                    <p class="mt-1 text-xs text-gray-500">
+                        Em alguns dispositivos, pode ser possivel conectar usando um codigo.
+                    </p>
+
+                    @if (filled($whatsAppInstance?->last_pairing_code))
+                        <div class="mt-3 inline-flex items-center rounded-md bg-gray-100 px-3 py-2 font-mono text-sm text-gray-800">
+                            {{ $whatsAppInstance->last_pairing_code }}
+                        </div>
+                    @else
+                        <div class="mt-3 text-xs text-gray-500 italic">
+                            Nenhum codigo disponivel no momento.
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+    </div>
+
     <div class="mt-10">
         <h3 class="text-md font-medium text-gray-900 mb-4">Seus Alertas Ativos</h3>
         <div class="space-y-4">
@@ -205,6 +407,12 @@
                             @foreach(($config->recipient_emails ?? []) as $recipientEmail)
                                 <span class="inline-flex items-center rounded-full bg-gray-100 text-gray-800 text-xs px-3 py-1">
                                     {{ strtolower($recipientEmail) }}
+                                </span>
+                            @endforeach
+
+                            @foreach(($config->recipient_phones ?? []) as $recipientPhone)
+                                <span class="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 text-xs px-3 py-1">
+                                    {{ $recipientPhone }}
                                 </span>
                             @endforeach
                         </div>
@@ -240,6 +448,29 @@
                     type="button"
                     class="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                     x-on:click.prevent="$dispatch('close-modal', 'google-calendar-info')"
+                >
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </x-modal>
+
+    <x-modal name="whatsapp-info" maxWidth="lg" centered>
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900">Como funciona a integracao com WhatsApp</h3>
+            <p class="mt-3 text-sm leading-6 text-gray-600">
+                Depois de conectar o WhatsApp, o sistema pode enviar alertas de vencimento e documentos diretamente para os telefones configurados.
+            </p>
+            <div class="mt-4 space-y-2 text-sm text-gray-600">
+                <p>Os alertas seguem as mesmas regras de antecedencia ja cadastradas.</p>
+                <p>Os documentos sao enviados como arquivo, uma mensagem por documento.</p>
+                <p>Recomendamos usar numeros completos com DDI + DDD (apenas digitos).</p>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    x-on:click.prevent="$dispatch('close-modal', 'whatsapp-info')"
                 >
                     Fechar
                 </button>

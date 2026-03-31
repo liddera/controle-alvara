@@ -148,21 +148,7 @@
                                     });
                                 })->values()->all();
 
-                                $legacyHistorico = $alvara->notificacoes->map(function($n) {
-                                    $msg = json_decode($n->mensagem, true) ?? [];
-                                    $metodo = $msg['metodo'] ?? 'email';
-                                    if ($metodo === 'email' && ($msg['whatsapp_aviso'] ?? false)) {
-                                        $metodo = 'email+whatsapp';
-                                    }
-                                    return [
-                                        'data' => $n->created_at->format('d/m/Y H:i'),
-                                        'ts' => $n->created_at->timestamp,
-                                        'destinatario' => $msg['destinatario_nome'] ?? 'Desconhecido',
-                                        'metodo' => $metodo
-                                    ];
-                                })->values()->all();
-
-                                $mergedHistorico = array_merge($dispatchHistorico, $legacyHistorico);
+                                $mergedHistorico = $dispatchHistorico;
                                 usort($mergedHistorico, function ($left, $right) {
                                     return ($right['ts'] ?? 0) <=> ($left['ts'] ?? 0);
                                 });

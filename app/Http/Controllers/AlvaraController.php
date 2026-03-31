@@ -15,6 +15,7 @@ use App\Actions\Alvaras\CriarAlvaraAction;
 use App\Actions\Alvaras\AtualizarAlvaraAction;
 use App\Actions\Alvaras\ExcluirAlvaraAction;
 use App\Actions\Alvaras\UploadDocumentosAction;
+use App\Services\Dispatch\DispatchHistoryBuilder;
 use App\Services\DocumentoService;
 use Illuminate\Support\Facades\Storage;
 
@@ -35,6 +36,12 @@ class AlvaraController extends Controller
             ->filterByDto($dto)
             ->latest()
             ->paginate(10);
+
+        $historyBuilder = app(DispatchHistoryBuilder::class);
+        $alvaras->getCollection()->transform(function ($alvara) use ($historyBuilder) {
+            $alvara->setAttribute('dispatch_historico', $historyBuilder->buildForAlvara($alvara));
+            return $alvara;
+        });
 
         $empresas = Empresa::all();
         $tiposAlvara = \App\Models\TipoAlvara::all();

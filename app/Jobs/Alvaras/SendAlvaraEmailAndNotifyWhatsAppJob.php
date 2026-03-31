@@ -6,6 +6,7 @@ use App\Models\Alvara;
 use App\Models\DocumentDispatch;
 use App\Models\DocumentDispatchMessage;
 use App\Models\WhatsAppInstance;
+use App\Services\Dispatch\DispatchStatus;
 use App\Services\Dispatch\DocumentDispatchService;
 use App\Services\Email\TransactionalEmailService;
 use App\Services\WhatsApp\WhatsAppOutboxService;
@@ -112,11 +113,31 @@ class SendAlvaraEmailAndNotifyWhatsAppJob implements ShouldQueue
         }
 
         try {
+            $whatsDispatchMessage = DocumentDispatchMessage::query()->firstOrCreate(
+                [
+                    'document_dispatch_id' => (int) $dispatch->getKey(),
+                    'provider' => 'whatsapp_gateway',
+                    'channel' => 'whatsapp',
+                    'message_type' => 'whatsapp_notice',
+                    'destination_phone' => $toNumber,
+                ],
+                [
+                    'owner_id' => (int) $this->ownerId,
+                    'current_status' => DispatchStatus::SENDING,
+                    'status_rank' => DispatchStatus::rank(DispatchStatus::SENDING),
+                    'metadata' => [
+                        'alvara_id' => (int) $alvara->getKey(),
+                        'origin' => 'email_notice',
+                    ],
+                ]
+            );
+
             $outboxService->queueText(
                 ownerId: $this->ownerId,
                 instanceKey: $instance->instance_key,
                 to: $toNumber,
                 text: $this->buildNoticeText($alvara, $email),
+                dispatchMessageId: (int) $whatsDispatchMessage->getKey(),
             );
         } catch (\Throwable $exception) {
             Log::warning('Falha ao enfileirar aviso WhatsApp (nao bloqueia o e-mail).', [

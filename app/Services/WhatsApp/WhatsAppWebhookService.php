@@ -5,6 +5,7 @@ namespace App\Services\WhatsApp;
 use App\Models\DocumentDispatchEvent;
 use App\Models\DocumentDispatchMessage;
 use App\Models\WhatsAppInstance;
+use App\Models\WhatsAppOutboxMessage;
 use App\Services\Dispatch\DocumentDispatchService;
 use App\Services\Dispatch\WhatsAppDispatchStatusMapper;
 use Illuminate\Http\Request;
@@ -99,11 +100,25 @@ class WhatsAppWebhookService
             ->first();
 
         if (! $dispatchMessage) {
-            Log::info('Webhook WhatsApp sem dispatch message correspondente.', [
-                'event' => $eventName,
-                'message_id' => $messageId,
-            ]);
-            return;
+            $outbox = WhatsAppOutboxMessage::query()
+                ->where('provider_message_id', $messageId)
+                ->first();
+
+            if ($outbox) {
+                $dispatchMessageId = $outbox->payload['dispatch_message_id'] ?? null;
+
+                if (is_numeric($dispatchMessageId)) {
+                    $dispatchMessage = DocumentDispatchMessage::query()->find((int) $dispatchMessageId);
+                }
+            }
+
+            if (! $dispatchMessage) {
+                Log::info('Webhook WhatsApp sem dispatch message correspondente.', [
+                    'event' => $eventName,
+                    'message_id' => $messageId,
+                ]);
+                return;
+            }
         }
 
         $dispatch = $dispatchMessage->dispatch;

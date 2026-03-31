@@ -30,6 +30,7 @@ class AlvaraController extends Controller
             'notificacoes' => fn($q) => $q->where('tipo', 'envio_documento')->latest(),
             'documentDispatches' => fn($q) => $q->latest(),
             'documentDispatches.messages',
+            'documentDispatches.messages.events',
         ])
             ->filterByDto($dto)
             ->latest()

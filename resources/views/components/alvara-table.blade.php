@@ -110,19 +110,42 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                             </a>
                             @php
-                                $dispatchHistorico = $alvara->documentDispatches->map(function($dispatch) {
-                                    $destination = $dispatch->destination_name
-                                        ?: $dispatch->destination_email
-                                        ?: $dispatch->destination_phone
-                                        ?: 'Desconhecido';
+                                $dispatchHistorico = $alvara->documentDispatches->flatMap(function($dispatch) {
+                                    return $dispatch->messages->flatMap(function($message) use ($dispatch) {
+                                        $destination = $dispatch->destination_name
+                                            ?: $message->destination_email
+                                            ?: $message->destination_phone
+                                            ?: $dispatch->destination_email
+                                            ?: $dispatch->destination_phone
+                                            ?: 'Desconhecido';
 
-                                    return [
-                                        'data' => optional($dispatch->requested_at ?: $dispatch->created_at)->format('d/m/Y H:i'),
-                                        'ts' => optional($dispatch->requested_at ?: $dispatch->created_at)?->timestamp ?? 0,
-                                        'destinatario' => $destination,
-                                        'metodo' => $dispatch->channel,
-                                        'status' => $dispatch->current_status,
-                                    ];
+                                        $method = $message->channel ?: $dispatch->channel;
+                                        $items = [];
+                                        $baseDate = $dispatch->requested_at ?: $dispatch->created_at ?: $message->created_at;
+
+                                        if ($baseDate) {
+                                            $items[] = [
+                                                'data' => $baseDate->format('d/m/Y H:i'),
+                                                'ts' => $baseDate->timestamp,
+                                                'destinatario' => $destination,
+                                                'metodo' => $method,
+                                                'status' => \App\Services\Dispatch\DispatchStatus::SENDING,
+                                            ];
+                                        }
+
+                                        foreach ($message->events as $event) {
+                                            $eventDate = $event->occurred_at ?: $event->received_at ?: $event->created_at;
+                                            $items[] = [
+                                                'data' => $eventDate?->format('d/m/Y H:i'),
+                                                'ts' => $eventDate?->timestamp ?? 0,
+                                                'destinatario' => $destination,
+                                                'metodo' => $method,
+                                                'status' => $event->normalized_status ?: $message->current_status,
+                                            ];
+                                        }
+
+                                        return $items;
+                                    });
                                 })->values()->all();
 
                                 $legacyHistorico = $alvara->notificacoes->map(function($n) {

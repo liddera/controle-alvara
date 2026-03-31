@@ -3,10 +3,12 @@
 namespace App\Services\WhatsApp;
 
 use App\Contracts\WhatsApp\WhatsAppGateway;
+use App\Models\User;
 use App\Models\WhatsAppInstance;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class OwnerWhatsAppInstanceService
 {
@@ -151,7 +153,11 @@ class OwnerWhatsAppInstanceService
 
     public function instanceKeyForOwner(int $ownerId): string
     {
-        return "owner-{$ownerId}";
+        $name = User::query()->whereKey($ownerId)->value('name');
+        $firstName = is_string($name) ? trim(strtok($name, ' ')) : '';
+        $slug = Str::slug($firstName ?: 'owner');
+
+        return "{$slug}-{$ownerId}";
     }
 
     private function buildWebhookConfig(): array

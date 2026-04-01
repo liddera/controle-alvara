@@ -17,15 +17,11 @@ class DispatchHistoryBuilder
 
         foreach ($alvara->documentDispatches as $dispatch) {
             foreach ($dispatch->messages as $message) {
-                $destination = $dispatch->destination_name
-                    ?: $message->destination_email
-                    ?: $message->destination_phone
-                    ?: $dispatch->destination_email
-                    ?: $dispatch->destination_phone
-                    ?: 'Desconhecido';
-
                 $method = $message->channel ?: $dispatch->channel;
                 $email = $message->destination_email ?: $dispatch->destination_email;
+                $phone = $message->destination_phone ?: $dispatch->destination_phone;
+
+                $destination = $this->resolveDestination($method, $dispatch->destination_name, $email, $phone);
 
                 $baseDate = $dispatch->requested_at ?: $dispatch->created_at ?: $message->created_at;
 
@@ -102,5 +98,23 @@ class DispatchHistoryBuilder
             'status' => $status,
             'status_rank' => DispatchStatus::rank($status),
         ];
+    }
+
+    private function resolveDestination(
+        ?string $method,
+        ?string $name,
+        ?string $email,
+        ?string $phone
+    ): string {
+        $normalizedMethod = strtolower((string) ($method ?? ''));
+
+        if ($normalizedMethod === 'whatsapp' && filled($phone)) {
+            return $phone;
+        }
+
+        return $name
+            ?: $email
+            ?: $phone
+            ?: 'Desconhecido';
     }
 }

@@ -79,7 +79,7 @@ class WhatsAppWebhookService
     {
         $eventName = $event ? strtolower(trim($event)) : 'unknown';
 
-        if (! in_array($eventName, ['send_message', 'send-message', 'messages_update', 'messages-update'], true)) {
+        if (! in_array($eventName, ['messages_update', 'messages-update'], true)) {
             return;
         }
 

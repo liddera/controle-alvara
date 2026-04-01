@@ -31,6 +31,10 @@ const initWhatsAppConnection = () => {
     const qrContainer = root.querySelector('[data-role="qr-container"]');
     const qrOverlay = root.querySelector('[data-role="qr-overlay"]');
     const statusPill = root.querySelector('[data-role="whatsapp-status-pill"]');
+    const connectForm = root.querySelector('[data-role="whatsapp-connect"]');
+    const disconnectForm = root.querySelector('[data-role="whatsapp-disconnect"]');
+    const qrBlock = root.querySelector('[data-role="whatsapp-qr-block"]');
+    const qrInstructions = root.querySelector('[data-role="qr-instructions"]');
     const qrImage = root.querySelector('[data-role="qr-image"]');
     const qrPayload = root.querySelector('[data-role="qr-payload"]');
 
@@ -38,6 +42,12 @@ const initWhatsAppConnection = () => {
     let attempts = 0;
 
     updateStatusPill(statusPill, currentStatus);
+
+    if (currentStatus === 'open') {
+        applyConnectedUI();
+    } else {
+        applyDisconnectedUI();
+    }
 
     const setOverlay = (visible) => {
         if (!qrOverlay) return;
@@ -47,6 +57,33 @@ const initWhatsAppConnection = () => {
     const setQrVisible = (visible) => {
         if (!qrContainer) return;
         qrContainer.classList.toggle('hidden', !visible);
+    };
+
+    const setBlockVisible = (element, visible) => {
+        if (!element) return;
+        element.classList.toggle('hidden', !visible);
+        if (!visible) {
+            element.style.display = 'none';
+        } else {
+            element.style.display = '';
+        }
+    };
+
+    const applyConnectedUI = () => {
+        setOverlay(false);
+        setQrVisible(false);
+        setBlockVisible(qrBlock, false);
+        setBlockVisible(connectForm, false);
+        setBlockVisible(disconnectForm, true);
+    };
+
+    const applyDisconnectedUI = () => {
+        setBlockVisible(qrBlock, true);
+        setBlockVisible(connectForm, true);
+        setBlockVisible(disconnectForm, false);
+        if (qrInstructions) {
+            qrInstructions.classList.remove('hidden');
+        }
     };
 
     const applyStatus = (data) => {
@@ -71,14 +108,19 @@ const initWhatsAppConnection = () => {
             if (nextStatus === 'open') {
                 setOverlay(true);
                 setTimeout(() => {
-                    setOverlay(false);
-                    setQrVisible(false);
+                    applyConnectedUI();
                 }, 1500);
             }
         }
 
         currentStatus = nextStatus;
         updateStatusPill(statusPill, currentStatus);
+
+        if (currentStatus === 'open') {
+            applyConnectedUI();
+        } else if (currentStatus === 'close' || currentStatus === 'unknown') {
+            applyDisconnectedUI();
+        }
     };
 
     const poll = async () => {

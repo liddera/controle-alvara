@@ -297,8 +297,14 @@
                     </button>
                 </form>
 
-                @if ($whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_CONNECTED)
-                    <form method="post" action="{{ route('whatsapp.disconnect') }}">
+                <form
+                    method="post"
+                    action="{{ route('whatsapp.disconnect') }}"
+                    data-role="whatsapp-disconnect"
+                    @if ($whatsAppStatus !== \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_CONNECTED)
+                        class="hidden"
+                    @endif
+                >
                         @csrf
                         @method('delete')
                         <button
@@ -308,8 +314,14 @@
                             Desconectar
                         </button>
                     </form>
-                @elseif ($whatsAppStatus !== \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_MISCONFIGURED)
-                    <form method="post" action="{{ route('whatsapp.connect') }}">
+                <form
+                    method="post"
+                    action="{{ route('whatsapp.connect') }}"
+                    data-role="whatsapp-connect"
+                    @if ($whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_CONNECTED || $whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_MISCONFIGURED)
+                        class="hidden"
+                    @endif
+                >
                         @csrf
                         <button
                             type="submit"
@@ -317,18 +329,22 @@
                         >
                             Gerar QR Code
                         </button>
-                    </form>
-                @endif
+                </form>
             </div>
         </div>
 
-        @if ($whatsAppStatus !== \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_CONNECTED && $whatsAppStatus !== \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_MISCONFIGURED)
-            <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div class="rounded-lg border border-gray-200 bg-white p-4">
-                    <div class="text-sm font-semibold text-gray-900">QR Code</div>
-                    <p class="mt-1 text-xs text-gray-500">
-                        Ao clicar em "Gerar QR Code", aguarde alguns segundos. Se o QR nao aparecer, clique em "Atualizar Status".
-                    </p>
+        <div
+            class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-1"
+            data-role="whatsapp-qr-block"
+            @if ($whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_CONNECTED || $whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_MISCONFIGURED)
+                style="display: none;"
+            @endif
+        >
+            <div class="rounded-lg border border-gray-200 bg-white p-4">
+                <div class="text-sm font-semibold text-gray-900">QR Code</div>
+                <p class="mt-1 text-xs text-gray-500" data-role="qr-instructions">
+                    Ao clicar em "Gerar QR Code", aguarde alguns segundos. Se o QR nao aparecer, clique em "Atualizar Status".
+                </p>
 
                     <div class="mt-3" data-role="qr-container">
                         @if (filled($whatsAppInstance?->last_qr_code_base64))
@@ -385,24 +401,8 @@
                     </div>
                 </div>
 
-                <div class="rounded-lg border border-gray-200 bg-white p-4">
-                    <div class="text-sm font-semibold text-gray-900">Codigo de Pareamento</div>
-                    <p class="mt-1 text-xs text-gray-500">
-                        Em alguns dispositivos, pode ser possivel conectar usando um codigo.
-                    </p>
-
-                    @if (filled($whatsAppInstance?->last_pairing_code))
-                        <div class="mt-3 inline-flex items-center rounded-md bg-gray-100 px-3 py-2 font-mono text-sm text-gray-800">
-                            {{ $whatsAppInstance->last_pairing_code }}
-                        </div>
-                    @else
-                        <div class="mt-3 text-xs text-gray-500 italic">
-                            Nenhum codigo disponivel no momento.
-                        </div>
-                    @endif
-                </div>
             </div>
-        @endif
+        </div>
     </div>
 
     <div class="mt-10">

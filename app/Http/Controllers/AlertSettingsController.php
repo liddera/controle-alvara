@@ -10,6 +10,7 @@ use App\Services\AlertConfigService;
 use App\Services\GoogleCalendarService;
 use App\Services\PersonalizacaoService;
 use App\Services\WhatsApp\OwnerWhatsAppInstanceService;
+use App\Services\WhatsApp\WhatsAppStatusPresenter;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
@@ -29,6 +30,7 @@ class AlertSettingsController extends Controller
         $googleCalendarStatus = $this->googleCalendarService->getConnectionStatus(auth()->user());
         $whatsAppStatus = $this->whatsAppInstanceService->getConnectionStatus($ownerId);
         $whatsAppInstance = $this->whatsAppInstanceService->findForOwner($ownerId);
+        $whatsAppStatusView = app(WhatsAppStatusPresenter::class)->present($whatsAppStatus);
 
         return view('profile.alerts', [
             'configs' => $this->service->listarPorUsuario(auth()->id()),
@@ -36,6 +38,7 @@ class AlertSettingsController extends Controller
             'ownerAlertEmail' => auth()->user()->email,
             'googleCalendarStatus' => $googleCalendarStatus,
             'whatsAppStatus' => $whatsAppStatus,
+            'whatsAppStatusView' => $whatsAppStatusView,
             'whatsAppInstance' => $whatsAppInstance,
             'personalizacao' => $this->personalizacaoService->obterPorOwner($ownerId),
         ]);

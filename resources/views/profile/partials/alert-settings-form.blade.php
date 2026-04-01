@@ -241,29 +241,30 @@
         @endif
     </div>
 
-    <div class="mt-6 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50 via-white to-emerald-50 p-5 shadow-sm">
+    @php
+        $whatsAppStatusValue = $whatsAppStatusView['status'] ?? $whatsAppStatus;
+        $whatsAppStatusLabel = $whatsAppStatusView['label'] ?? 'Desconectado';
+        $whatsAppStatusClass = $whatsAppStatusView['class'] ?? 'bg-red-100 text-red-700';
+    @endphp
+
+    <div
+        class="mt-6 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50 via-white to-emerald-50 p-5 shadow-sm"
+        data-whatsapp-connection
+        data-refresh-url="{{ route('whatsapp.refresh') }}"
+        data-status="{{ $whatsAppStatusValue }}"
+    >
         <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div class="space-y-2">
                 <div class="flex items-center gap-2">
                     <h3 class="text-md font-medium text-gray-900">WhatsApp</h3>
 
-                    @if ($whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_CONNECTED)
-                        <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-                            Conectado
-                        </span>
-                    @elseif ($whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_CONNECTING)
-                        <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                            Aguardando conexao
-                        </span>
-                    @elseif ($whatsAppStatus === \App\Services\WhatsApp\OwnerWhatsAppInstanceService::STATUS_MISCONFIGURED)
-                        <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
-                            Indisponivel
-                        </span>
-                    @else
-                        <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
-                            Desconectado
-                        </span>
-                    @endif
+                    <span
+                        data-role="whatsapp-status-pill"
+                        data-status="{{ $whatsAppStatusValue }}"
+                        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $whatsAppStatusClass }}"
+                    >
+                        {{ $whatsAppStatusLabel }}
+                    </span>
                 </div>
 
                 <p class="text-sm text-gray-600">
@@ -329,16 +330,25 @@
                         Ao clicar em "Gerar QR Code", aguarde alguns segundos. Se o QR nao aparecer, clique em "Atualizar Status".
                     </p>
 
-                    @if (filled($whatsAppInstance?->last_qr_code_base64))
-                        <div class="mt-3 flex justify-center">
-                            <img
-                                alt="QR Code WhatsApp"
-                                class="h-48 w-48 rounded-md border border-gray-200 bg-white p-2"
-                                src="data:image/png;base64,{{ $whatsAppInstance->last_qr_code_base64 }}"
-                            />
-                        </div>
-                    @elseif (filled($whatsAppInstance?->last_qr_code_payload))
-                        <div class="mt-3 space-y-3">
+                    <div class="mt-3" data-role="qr-container">
+                        @if (filled($whatsAppInstance?->last_qr_code_base64))
+                            <div class="relative flex justify-center">
+                                <img
+                                    alt="QR Code WhatsApp"
+                                    class="h-48 w-48 rounded-md border border-gray-200 bg-white p-2"
+                                    data-role="qr-image"
+                                    src="data:image/png;base64,{{ $whatsAppInstance->last_qr_code_base64 }}"
+                                />
+                                <div
+                                    data-role="qr-overlay"
+                                    class="hidden absolute inset-0 flex flex-col items-center justify-center rounded-md bg-white/80 text-xs text-gray-700"
+                                >
+                                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
+                                    <span class="mt-2 font-medium">Conectando...</span>
+                                </div>
+                            </div>
+                        @elseif (filled($whatsAppInstance?->last_qr_code_payload))
+                            <div class="relative space-y-3">
                             @if (app()->environment('local'))
                                 <div class="flex justify-center">
                                     <img
@@ -354,16 +364,25 @@
 
                             <details class="rounded-md border border-gray-200 bg-gray-50 p-3">
                                 <summary class="cursor-pointer text-xs font-medium text-gray-700">Ver payload do QR</summary>
-                                <div class="mt-2 break-all font-mono text-[10px] text-gray-700">
+                                <div class="mt-2 break-all font-mono text-[10px] text-gray-700" data-role="qr-payload">
                                     {{ $whatsAppInstance->last_qr_code_payload }}
                                 </div>
                             </details>
+
+                            <div
+                                data-role="qr-overlay"
+                                class="hidden absolute inset-0 flex flex-col items-center justify-center rounded-md bg-white/80 text-xs text-gray-700"
+                            >
+                                <div class="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
+                                <span class="mt-2 font-medium">Conectando...</span>
+                            </div>
                         </div>
-                    @else
-                        <div class="mt-3 text-xs text-gray-500 italic">
-                            QR code ainda nao foi recebido.
-                        </div>
-                    @endif
+                        @else
+                            <div class="text-xs text-gray-500 italic">
+                                QR code ainda nao foi recebido.
+                            </div>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="rounded-lg border border-gray-200 bg-white p-4">

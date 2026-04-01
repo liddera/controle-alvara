@@ -180,9 +180,9 @@ class WhatsAppWebhookService
             $this->documentDispatchService->updateMessageStatus(
                 message: $dispatchMessage,
                 status: $normalizedStatus,
-                providerStatusRaw: $messageStatus ?: $eventName,
+                providerStatusRaw: $messageStatus ?: $eventNameNormalized,
                 metadata: [
-                    'webhook_event' => $eventName,
+                    'webhook_event' => $eventNameNormalized,
                 ]
             );
         }

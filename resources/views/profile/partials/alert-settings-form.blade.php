@@ -124,6 +124,7 @@
             <x-input-label for="recipient_phone_input" :value="__('Destinatários WhatsApp (Telefones)')" />
             <p class="text-xs text-gray-500 mt-1">
                 Adicione os telefones que devem receber o alerta via WhatsApp (apenas dígitos, com DDI + DDD).
+                Formato BR: <span class="font-mono">+55 (DD) 9XXXX-XXXX</span>.
             </p>
 
             <div class="mt-3 flex flex-wrap gap-2">
@@ -143,6 +144,7 @@
                     x-model="newPhone"
                     @keydown.enter.prevent="addRecipient()"
                     type="tel"
+                    inputmode="numeric"
                     class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 text-sm"
                     placeholder="Ex: 5599999999999"
                 />

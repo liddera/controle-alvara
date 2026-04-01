@@ -95,9 +95,10 @@ class WhatsAppWebhookService
 
     private function handleMessageEvent(?string $event, array $payload, WhatsAppInstance $instance): void
     {
-        $eventName = $event ? strtolower(trim($event)) : 'unknown';
+        $eventNameRaw = $event ? strtolower(trim($event)) : 'unknown';
+        $eventNameNormalized = str_replace(['.', '-'], '_', $eventNameRaw);
 
-        if (! in_array($eventName, ['messages_update', 'messages-update'], true)) {
+        if (! in_array($eventNameNormalized, ['messages_update'], true)) {
             return;
         }
 
@@ -106,7 +107,7 @@ class WhatsAppWebhookService
 
         if (! $messageId) {
             Log::warning('Webhook WhatsApp recebido sem messageId.', [
-                'event' => $eventName,
+                'event' => $eventNameRaw,
                 'instance_key' => $instance->instance_key,
             ]);
             return;
@@ -132,7 +133,7 @@ class WhatsAppWebhookService
 
             if (! $dispatchMessage) {
                 Log::info('Webhook WhatsApp sem dispatch message correspondente.', [
-                    'event' => $eventName,
+                    'event' => $eventNameRaw,
                     'message_id' => $messageId,
                 ]);
                 return;
@@ -143,15 +144,15 @@ class WhatsAppWebhookService
 
         if (! $dispatch) {
             Log::warning('Webhook WhatsApp sem dispatch associado.', [
-                'event' => $eventName,
+                'event' => $eventNameRaw,
                 'message_id' => $messageId,
             ]);
             return;
         }
 
-        $normalizedStatus = $this->statusMapper->mapEvent($event, $messageStatus);
+        $normalizedStatus = $this->statusMapper->mapEvent($eventNameNormalized, $messageStatus);
 
-        $eventKey = $this->resolveEventKey($payload, $eventName, $messageId);
+        $eventKey = $this->resolveEventKey($payload, $eventNameNormalized, $messageId, $messageStatus);
 
         $eventModel = DocumentDispatchEvent::query()->firstOrCreate(
             [
@@ -162,7 +163,7 @@ class WhatsAppWebhookService
                 'owner_id' => $dispatch->owner_id,
                 'document_dispatch_id' => $dispatch->getKey(),
                 'document_dispatch_message_id' => $dispatchMessage->getKey(),
-                'event_name' => $eventName,
+                'event_name' => $eventNameNormalized,
                 'provider_message_id' => $messageId,
                 'normalized_status' => $normalizedStatus,
                 'occurred_at' => $this->resolveOccurredAt($payload),
@@ -244,7 +245,12 @@ class WhatsAppWebhookService
         return null;
     }
 
-    private function resolveEventKey(array $payload, string $eventName, string $messageId): string
+    private function resolveEventKey(
+        array $payload,
+        string $eventName,
+        string $messageId,
+        ?string $messageStatus = null
+    ): string
     {
         $eventId = Arr::get($payload, 'eventId') ?? Arr::get($payload, 'event_id');
 
@@ -252,19 +258,26 @@ class WhatsAppWebhookService
             return $eventId;
         }
 
-        $timestamp = Arr::get($payload, 'timestamp') ?? Arr::get($payload, 'ts');
+        $timestamp = Arr::get($payload, 'timestamp')
+            ?? Arr::get($payload, 'ts')
+            ?? Arr::get($payload, 'date_time')
+            ?? Arr::get($payload, 'data.date_time');
 
         return sha1(implode('|', [
             'whatsapp_gateway',
             $eventName,
             $messageId,
+            (string) ($messageStatus ?? ''),
             (string) $timestamp,
         ]));
     }
 
     private function resolveOccurredAt(array $payload): ?Carbon
     {
-        $timestamp = Arr::get($payload, 'timestamp') ?? Arr::get($payload, 'ts');
+        $timestamp = Arr::get($payload, 'timestamp')
+            ?? Arr::get($payload, 'ts')
+            ?? Arr::get($payload, 'date_time')
+            ?? Arr::get($payload, 'data.date_time');
 
         if (is_numeric($timestamp)) {
             return Carbon::createFromTimestamp((int) $timestamp);

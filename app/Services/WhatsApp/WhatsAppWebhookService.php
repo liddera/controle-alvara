@@ -152,6 +152,18 @@ class WhatsAppWebhookService
 
         $normalizedStatus = $this->statusMapper->mapEvent($eventNameNormalized, $messageStatus);
 
+        if ($normalizedStatus === \App\Services\Dispatch\DispatchStatus::SENT) {
+            $alreadySent = DocumentDispatchEvent::query()
+                ->where('provider', 'whatsapp_gateway')
+                ->where('document_dispatch_message_id', $dispatchMessage->getKey())
+                ->where('normalized_status', \App\Services\Dispatch\DispatchStatus::SENT)
+                ->exists();
+
+            if ($alreadySent) {
+                return;
+            }
+        }
+
         $eventKey = $this->resolveEventKey($payload, $eventNameNormalized, $messageId, $messageStatus);
 
         $eventModel = DocumentDispatchEvent::query()->firstOrCreate(

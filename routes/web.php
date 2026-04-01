@@ -5,15 +5,17 @@ use App\Http\Controllers\AlvaraController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OwnerWhatsAppConnectionController;
 use App\Http\Controllers\PersonalizacaoController;
 use App\Http\Controllers\PublicDocumentoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return auth()->check()
+    return Auth::check()
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 });
@@ -29,8 +31,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/export', [DashboardController::class, 'export'])->name('dashboard.export');
     Route::resource('empresas', EmpresaController::class);
     Route::resource('alvaras', AlvaraController::class);
-    Route::post('/alvaras/{alvara}/enviar-email', [AlvaraController::class, 'enviarEmail'])->name('alvaras.enviar-email');
-    Route::post('/alvaras/{alvara}/enviar-whatsapp', [AlvaraController::class, 'enviarWhatsApp'])->name('alvaras.enviar-whatsapp');
+    Route::post('/alvaras/{alvara}/enviar-email', [AlvaraController::class, 'enviarEmail'])
+        ->middleware('throttle:dispatch-send')
+        ->name('alvaras.enviar-email');
+    Route::post('/alvaras/{alvara}/enviar-whatsapp', [AlvaraController::class, 'enviarWhatsApp'])
+        ->middleware('throttle:dispatch-send')
+        ->name('alvaras.enviar-whatsapp');
     Route::patch('/alvaras/{alvara}/observacoes', [AlvaraController::class, 'updateObservacoes'])->name('alvaras.observacoes.update');
     Route::resource('users', UserController::class)->middleware('plan.limit');
     Route::delete('/documentos/{documento}', [AlvaraController::class, 'destroyDocumento'])->name('documentos.destroy');
@@ -55,15 +61,14 @@ Route::middleware('auth')->group(function () {
 
     // WhatsApp Gateway (Owner connection)
     Route::post('/profile/whatsapp/connect', [OwnerWhatsAppConnectionController::class, 'connect'])->name('whatsapp.connect');
-    Route::post('/profile/whatsapp/refresh', [OwnerWhatsAppConnectionController::class, 'refresh'])->name('whatsapp.refresh');
+    Route::post('/profile/whatsapp/refresh', [OwnerWhatsAppConnectionController::class, 'refresh'])
+        ->middleware('throttle:whatsapp-refresh')
+        ->name('whatsapp.refresh');
     Route::delete('/profile/whatsapp/disconnect', [OwnerWhatsAppConnectionController::class, 'disconnect'])->name('whatsapp.disconnect');
 
     // Mark Notifications as Read
-    Route::post('/notifications/mark-as-read', function () {
-        auth()->user()->unreadNotifications->markAsRead();
-
-        return back();
-    })->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])
+        ->name('notifications.mark-as-read');
 
     Route::get('/notifications/{notification}/read', [AlertSettingsController::class, 'readAndRedirect'])->name('notifications.read');
 

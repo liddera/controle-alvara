@@ -9,10 +9,12 @@ use App\Http\Controllers\EmailWebhookController;
 use App\Http\Controllers\WhatsAppGatewayWebhookController;
 
 // Rotas públicas (estritamente para autenticação se necessário via token)
-Route::post('/login', [ApiAuthController::class, 'login']);
+Route::post('/login', [ApiAuthController::class, 'login'])
+    ->middleware('throttle:login');
 
 // Webhooks do gateway WhatsApp (publico, protegido por secret em header)
 Route::post('/webhooks/whatsapp-gateway/{event?}', WhatsAppGatewayWebhookController::class)
+    ->middleware('throttle:whatsapp-webhook')
     ->name('webhooks.whatsapp-gateway');
 
 // Webhook do provedor de email (publico, protegido por secret em header)

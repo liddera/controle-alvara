@@ -13,7 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
+            'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
             'plan.limit' => \App\Http\Middleware\CheckPlanLimits::class,
+            'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
+            'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
             'user.status' => \App\Http\Middleware\CheckUserStatus::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
@@ -22,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             \App\Http\Middleware\CheckUserStatus::class,
+            'throttle:web',
+        ]);
+
+        $middleware->api(append: [
+            'throttle:api',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

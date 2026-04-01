@@ -171,7 +171,7 @@
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
             <!-- Modal Panel -->
-            <div x-show="open" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full">
+            <div x-show="open" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
                 
                 <div class="bg-gray-50 px-4 py-3 border-b flex justify-between items-center">
                     <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
@@ -286,6 +286,9 @@
                                         <div>
                                             <span class="font-semibold text-gray-700" x-text="hist.data"></span> -
                                             <span class="text-gray-600" x-text="hist.destinatario"></span>
+                                            <template x-if="hist.email">
+                                                <span class="text-gray-500" x-text="` <${hist.email}>`"></span>
+                                            </template>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 uppercase" x-text="hist.metodo">

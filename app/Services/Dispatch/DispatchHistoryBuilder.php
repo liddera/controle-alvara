@@ -25,6 +25,7 @@ class DispatchHistoryBuilder
                     ?: 'Desconhecido';
 
                 $method = $message->channel ?: $dispatch->channel;
+                $email = $message->destination_email ?: $dispatch->destination_email;
 
                 $baseDate = $dispatch->requested_at ?: $dispatch->created_at ?: $message->created_at;
 
@@ -34,6 +35,7 @@ class DispatchHistoryBuilder
                         destination: $destination,
                         method: $method,
                         status: DispatchStatus::SENDING,
+                        email: $email,
                     );
                 }
 
@@ -50,6 +52,7 @@ class DispatchHistoryBuilder
                         destination: $destination,
                         method: $method,
                         status: $status,
+                        email: $email,
                     );
                 }
             }
@@ -79,7 +82,13 @@ class DispatchHistoryBuilder
     /**
      * @return array<string, mixed>
      */
-    private function makeItem(Carbon $date, string $destination, string $method, ?string $status): array
+    private function makeItem(
+        Carbon $date,
+        string $destination,
+        string $method,
+        ?string $status,
+        ?string $email = null
+    ): array
     {
         $timezone = (string) config('app.timezone');
         $localized = $date->copy()->timezone($timezone);
@@ -88,6 +97,7 @@ class DispatchHistoryBuilder
             'data' => $localized->format('d/m/Y H:i'),
             'ts' => $localized->timestamp,
             'destinatario' => $destination,
+            'email' => $email,
             'metodo' => $method,
             'status' => $status,
             'status_rank' => DispatchStatus::rank($status),

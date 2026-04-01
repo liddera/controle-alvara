@@ -190,6 +190,7 @@ class WhatsAppWebhookService
     private function resolveMessageId(array $payload): ?string
     {
         $candidates = [
+            Arr::get($payload, 'data.keyId'),
             Arr::get($payload, 'key.id'),
             Arr::get($payload, 'data.key.id'),
             Arr::get($payload, 'message.key.id'),

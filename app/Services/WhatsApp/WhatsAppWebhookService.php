@@ -29,6 +29,12 @@ class WhatsAppWebhookService
 
         $instanceKey = $this->resolveInstanceKey($payload);
 
+        Log::info('Webhook WhatsApp recebido.', [
+            'event' => $event,
+            'instance_key' => $instanceKey,
+            'payload' => $payload,
+        ]);
+
         if (! filled($instanceKey)) {
             Log::warning('Webhook WhatsApp recebido sem instanceKey.', ['event' => $event]);
             return;
@@ -55,6 +61,12 @@ class WhatsAppWebhookService
                 $instance->last_qr_code_base64 = $qr;
                 $instance->status = OwnerWhatsAppInstanceService::STATUS_CONNECTING;
             }
+
+            Log::info('Webhook WhatsApp QR code recebido.', [
+                'event' => $eventNormalized,
+                'instance_key' => $instance->instance_key,
+                'has_qr' => filled($qr),
+            ]);
         }
 
         if (in_array($eventNormalized, ['connection-update', 'connection_update', 'connectionupdate'], true)) {
@@ -68,6 +80,12 @@ class WhatsAppWebhookService
                     $instance->connected_at = $instance->connected_at ?: now();
                 }
             }
+
+            Log::info('Webhook WhatsApp connection-update recebido.', [
+                'event' => $eventNormalized,
+                'instance_key' => $instance->instance_key,
+                'state' => $state,
+            ]);
         }
 
         $instance->save();

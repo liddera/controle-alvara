@@ -6,7 +6,10 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreEmpresaRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    public function authorize(): bool
+    {
+        return true;
+    }
 
     public function rules(): array
     {
@@ -20,6 +23,8 @@ class StoreEmpresaRequest extends FormRequest
             'tipos_alvara.*' => ['exists:tipo_alvaras,id'],
             'datas_vencimento' => ['nullable', 'array'],
             'datas_vencimento.*' => ['nullable', 'date'],
+            'anexos' => ['nullable', 'array'],
+            'anexos.*' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
         ];
     }
 }

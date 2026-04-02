@@ -52,7 +52,7 @@ class EmpresaService
                     $status = 'vigente';
                 }
                 
-                \App\Models\Alvara::updateOrCreate([
+                $alvara = \App\Models\Alvara::updateOrCreate([
                     'empresa_id' => $empresa->id,
                     'tipo_alvara_id' => $tipoId,
                 ], [
@@ -62,6 +62,12 @@ class EmpresaService
                     'data_vencimento' => $dto->datas_vencimento[$tipoId],
                     'status' => $status
                 ]);
+
+                if (!empty($dto->anexos[$tipoId])) {
+                    $arquivo = $dto->anexos[$tipoId];
+                    $documentoDto = \App\DTOs\DocumentoDTO::fromRequest($alvara->id, $arquivo);
+                    app(\App\Services\DocumentoService::class)->store($documentoDto);
+                }
             }
         }
     }

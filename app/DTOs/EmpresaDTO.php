@@ -15,6 +15,7 @@ class EmpresaDTO
         public string $email,
         public array $tipos_alvara = [],
         public array $datas_vencimento = [],
+        public array $anexos = [],
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -28,6 +29,7 @@ class EmpresaDTO
             email: $request->validated('email'),
             tipos_alvara: $request->validated('tipos_alvara', []),
             datas_vencimento: $request->validated('datas_vencimento', []),
+            anexos: $request->file('anexos', []),
         );
     }
 

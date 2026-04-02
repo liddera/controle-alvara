@@ -11,7 +11,7 @@
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-8">
-                <form method="POST" action="{{ route('empresas.store') }}" class="space-y-6" x-data="cnpjLookup()">
+                <form method="POST" action="{{ route('empresas.store') }}" class="space-y-6" x-data="cnpjLookup()" enctype="multipart/form-data">
                     @csrf
 
                     {{-- ── CNPJ + Busca ──────────────────────────────────────────── --}}
@@ -101,10 +101,17 @@
                                     <input type="checkbox" x-model="selected" name="tipos_alvara[]" value="{{ $tipo->id }}" class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
                                     <span class="text-sm text-gray-700">{{ $tipo->nome }}</span>
                                 </label>
-                                <div x-show="selected.includes('{{ $tipo->id }}')" x-collapse class="mt-2 pl-7">
-                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Data de Vencimento</label>
-                                    <input type="date" name="datas_vencimento[{{ $tipo->id }}]" value="{{ old('datas_vencimento.'.$tipo->id) }}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 text-sm py-1">
-                                    @error('datas_vencimento.'.$tipo->id) <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                <div x-show="selected.includes('{{ $tipo->id }}')" x-collapse class="mt-2 pl-7 space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 mb-1">Data de Vencimento</label>
+                                        <input type="date" name="datas_vencimento[{{ $tipo->id }}]" value="{{ old('datas_vencimento.'.$tipo->id) }}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 text-sm py-1">
+                                        @error('datas_vencimento.'.$tipo->id) <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 mb-1">Anexar Alvará</label>
+                                        <input type="file" name="anexos[{{ $tipo->id }}]" accept=".pdf,.jpg,.jpeg,.png" class="w-full text-sm text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
+                                        @error('anexos.'.$tipo->id) <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                    </div>
                                 </div>
                             </div>
                             @endforeach

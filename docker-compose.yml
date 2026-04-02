@@ -1,14 +1,105 @@
-version: "3.9"
+# 🚀 Alvras - Docker Compose para Painéis (EasyPanel / Coolify / Portainer)
+# Este arquivo é otimizado para Deploys em Nuvem onde o Painel gerencia a rede e o SSL.
 
 services:
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/production/nginx/Dockerfile
+    container_name: alvras-nginx-prod
+    restart: unless-stopped
+    # Em painéis, você pode mapear a porta 80 ou deixar o painel gerenciar o Proxy.
+    ports:
+      - "80:80"
+    volumes:
+      - alvras-storage-production:/var/www/html/storage:ro
+    depends_on:
+      - app
+    networks:
+      - alvras-network
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/production/php/Dockerfile
+    container_name: alvras-app-prod
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: pgsql
+      REDIS_HOST: redis
+      AWS_ENDPOINT: http://minio:9000
+      # Configure sua APP_URL real no painel ou no .env
+      AWS_URL: ${APP_URL}/alvras
+    volumes:
+      - alvras-storage-production:/var/www/html/storage
+    depends_on:
+      - pgsql
+    networks:
+      - alvras-network
+
+  queue_worker:
+    build:
+      context: .
+      dockerfile: docker/production/php/Dockerfile
+    container_name: alvras-worker-prod
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3
+    env_file:
+      - .env
+    environment:
+      DB_HOST: pgsql
+      REDIS_HOST: redis
+      AWS_ENDPOINT: http://minio:9000
+      AWS_URL: ${APP_URL}/alvras
+    volumes:
+      - alvras-storage-production:/var/www/html/storage
+    depends_on:
+      - app
+      - redis
+    networks:
+      - alvras-network
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/production/php/Dockerfile
+    container_name: alvras-scheduler-prod
+    restart: unless-stopped
+    # Padrão Laravel 11/12 para Docker
+    command: php artisan schedule:work --verbose --no-interaction
+    env_file:
+      - .env
+    environment:
+      DB_HOST: pgsql
+      REDIS_HOST: redis
+      AWS_ENDPOINT: http://minio:9000
+      AWS_URL: ${APP_URL}/alvras
+    volumes:
+      - alvras-storage-production:/var/www/html/storage
+    depends_on:
+      - app
+    networks:
+      - alvras-network
+
+  redis:
+    image: redis:alpine
+    container_name: alvras-redis-prod
+    restart: unless-stopped
+    volumes:
+      - redis-data-production:/data
+    networks:
+      - alvras-network
+
   pgsql:
     image: postgres:16
-    ports:
-      - "5432:5432"
+    container_name: alvras-pgsql-prod
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: alvras
-      POSTGRES_USER: alvras_user
-      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: ${DB_DATABASE:-alvras}
+      POSTGRES_USER: ${DB_USERNAME:-alvras_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secretpassword}
     volumes:
       - alvras-pgsql-data:/var/lib/postgresql/data
     networks:
@@ -16,12 +107,13 @@ services:
 
   minio:
     image: minio/minio
+    container_name: alvras-minio-prod
+    restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio123
-      MINIO_BROWSER_REDIRECT_URL: "http://localhost:9001"
-      MINIO_SERVER_URL: "http://localhost:9000"
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-minio}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-minio123}
+      # O painel cuidará do redirecionamento de URL se necessário
     volumes:
       - minio-data:/data
     ports:
@@ -35,5 +127,8 @@ networks:
     driver: bridge
 
 volumes:
+  # Aqui removemos o 'external: true' para que o Painel crie os volumes do zero no servidor novo
   alvras-pgsql-data:
   minio-data:
+  redis-data-production:
+  alvras-storage-production:

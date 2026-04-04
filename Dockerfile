@@ -10,8 +10,9 @@ RUN composer install \
     --no-interaction \
     --no-progress \
     --optimize-autoloader \
-    --ignore-platform-req=ext-pcntl \
-    --ignore-platform-req=ext-posix
+    --ignore-platform-reqs
+
+# =========================
 
 FROM node:22-alpine AS frontend_assets
 
@@ -26,6 +27,8 @@ COPY public ./public
 COPY vite.config.js postcss.config.js tailwind.config.js ./
 
 RUN npm run build
+
+# =========================
 
 FROM php:8.2-apache
 
@@ -66,10 +69,14 @@ RUN apt-get update && apt-get install -y \
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
 
+# Copia aplicação
 COPY . .
+
+# Copia dependências e build
 COPY --from=composer_deps /app/vendor ./vendor
 COPY --from=frontend_assets /app/public/build ./public/build
 
+# Permissões Laravel
 RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache
@@ -77,4 +84,3 @@ RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framewor
 EXPOSE 80
 
 CMD ["apache2-foreground"]
-

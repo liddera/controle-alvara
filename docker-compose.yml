@@ -9,14 +9,12 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"   # 🔥 SSL ativado
+      - "443:443"
     volumes:
       - alvras-storage-production:/var/www/html/storage:ro
-      - .env:/var/www/html/.env:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro   # 🔥 CERTIFICADOS SSL
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
-      app:
-        condition: service_healthy
+      - app
     networks:
       - alvras-network
 
@@ -32,19 +30,21 @@ services:
       DB_HOST: pgsql
       REDIS_HOST: redis
       AWS_ENDPOINT: http://minio:9000
-      AWS_URL: ${AWS_URL}
       APP_ENV: production
       APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env
     depends_on:
-      pgsql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - pgsql
+      - redis
     networks:
       - alvras-network
+    healthcheck:
+      test: ["CMD", "php", "artisan", "tinker", "--execute=exit(0);"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   queue_worker:
     build:
@@ -59,17 +59,13 @@ services:
       DB_HOST: pgsql
       REDIS_HOST: redis
       AWS_ENDPOINT: http://minio:9000
-      AWS_URL: ${AWS_URL}
       APP_ENV: production
       APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env
     depends_on:
-      app:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - app
+      - redis
     networks:
       - alvras-network
 
@@ -86,15 +82,12 @@ services:
       DB_HOST: pgsql
       REDIS_HOST: redis
       AWS_ENDPOINT: http://minio:9000
-      AWS_URL: ${AWS_URL}
       APP_ENV: production
       APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env
     depends_on:
-      app:
-        condition: service_healthy
+      - app
     networks:
       - alvras-network
 
@@ -102,6 +95,7 @@ services:
     image: redis:alpine
     container_name: alvras-redis-prod
     restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data-production:/data
     healthcheck:
@@ -145,6 +139,11 @@ services:
       - "9001:9001"
     networks:
       - alvras-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
 
 networks:
   alvras-network:

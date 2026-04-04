@@ -12,16 +12,16 @@ COPY vite.config.js postcss.config.js tailwind.config.js ./
 
 RUN npm run build
 
+
 # Stage 2: Nginx Production Image
 FROM nginx:alpine
 
-# Copy custom Nginx configuration
+# Nginx config (CORRETO aqui)
 COPY ./docker/production/nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy public directory and compiled assets from the builder stage
+# Assets compilados
 COPY --from=builder /app/public /var/www/html/public
 
-# Setup storage directory as volume mountpoint
 RUN mkdir -p /var/www/html/storage/app/public
 
 WORKDIR /var/www/html/public

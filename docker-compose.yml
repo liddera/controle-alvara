@@ -9,9 +9,11 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"   # 🔥 SSL ativado
     volumes:
       - alvras-storage-production:/var/www/html/storage:ro
-      - .env:/var/www/html/.env:ro        # Nginx pode ficar somente leitura
+      - .env:/var/www/html/.env:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro   # 🔥 CERTIFICADOS SSL
     depends_on:
       app:
         condition: service_healthy
@@ -35,17 +37,12 @@ services:
       APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env              # ← Sem :ro (permite escrita)
+      - .env:/var/www/html/.env
     depends_on:
       pgsql:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "php", "-r", "echo 'OK';"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
     networks:
       - alvras-network
 
@@ -67,7 +64,7 @@ services:
       APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env              # ← Sem :ro
+      - .env:/var/www/html/.env
     depends_on:
       app:
         condition: service_healthy
@@ -94,7 +91,7 @@ services:
       APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env              # ← Sem :ro
+      - .env:/var/www/html/.env
     depends_on:
       app:
         condition: service_healthy

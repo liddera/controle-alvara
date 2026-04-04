@@ -13,6 +13,7 @@ use App\Services\WhatsApp\OwnerWhatsAppInstanceService;
 use App\Services\WhatsApp\WhatsAppStatusPresenter;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class AlertSettingsController extends Controller
@@ -26,22 +27,59 @@ class AlertSettingsController extends Controller
 
     public function index(): View
     {
-        $ownerId = auth()->user()->owner_id ?? auth()->id();
-        $googleCalendarStatus = $this->googleCalendarService->getConnectionStatus(auth()->user());
-        $whatsAppStatus = $this->whatsAppInstanceService->getConnectionStatus($ownerId);
-        $whatsAppInstance = $this->whatsAppInstanceService->findForOwner($ownerId);
-        $whatsAppStatusView = app(WhatsAppStatusPresenter::class)->present($whatsAppStatus);
+        $user = auth()->user();
 
-        return view('profile.alerts', [
-            'configs' => $this->service->listarPorUsuario(auth()->id()),
-            'tiposAlvara' => TipoAlvara::all(),
-            'ownerAlertEmail' => auth()->user()->email,
-            'googleCalendarStatus' => $googleCalendarStatus,
-            'whatsAppStatus' => $whatsAppStatus,
-            'whatsAppStatusView' => $whatsAppStatusView,
-            'whatsAppInstance' => $whatsAppInstance,
-            'personalizacao' => $this->personalizacaoService->obterPorOwner($ownerId),
+        Log::info('Profile alerts: request started.', [
+            'user_id' => auth()->id(),
+            'has_user' => (bool) $user,
         ]);
+
+        try {
+            $ownerId = $user?->owner_id ?? auth()->id();
+            Log::info('Profile alerts: owner resolved.', ['owner_id' => $ownerId]);
+
+            $googleCalendarStatus = $this->googleCalendarService->getConnectionStatus($user);
+            Log::info('Profile alerts: Google status loaded.', ['status' => $googleCalendarStatus]);
+
+            $whatsAppStatus = $this->whatsAppInstanceService->getConnectionStatus((int) $ownerId);
+            Log::info('Profile alerts: WhatsApp status loaded.', ['status' => $whatsAppStatus]);
+
+            $whatsAppInstance = $this->whatsAppInstanceService->findForOwner((int) $ownerId);
+            Log::info('Profile alerts: WhatsApp instance loaded.', [
+                'has_instance' => (bool) $whatsAppInstance,
+            ]);
+
+            $whatsAppStatusView = app(WhatsAppStatusPresenter::class)->present($whatsAppStatus);
+            Log::info('Profile alerts: WhatsApp presenter built.');
+
+            $configs = $this->service->listarPorUsuario((int) auth()->id());
+            Log::info('Profile alerts: alert configs loaded.', ['count' => $configs->count()]);
+
+            $tiposAlvara = TipoAlvara::all();
+            Log::info('Profile alerts: tipos alvara loaded.', ['count' => $tiposAlvara->count()]);
+
+            $personalizacao = $this->personalizacaoService->obterPorOwner((int) $ownerId);
+            Log::info('Profile alerts: personalization loaded.');
+
+            return view('profile.alerts', [
+                'configs' => $configs,
+                'tiposAlvara' => $tiposAlvara,
+                'ownerAlertEmail' => $user?->email,
+                'googleCalendarStatus' => $googleCalendarStatus,
+                'whatsAppStatus' => $whatsAppStatus,
+                'whatsAppStatusView' => $whatsAppStatusView,
+                'whatsAppInstance' => $whatsAppInstance,
+                'personalizacao' => $personalizacao,
+            ]);
+        } catch (\Throwable $exception) {
+            Log::error('Profile alerts: request failed.', [
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ]);
+
+            throw $exception;
+        }
     }
 
     public function store(StoreAlertConfigRequest $request, UpsertAlertConfigAction $action)

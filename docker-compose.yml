@@ -1,6 +1,3 @@
-# 🚀 Alvras - Docker Compose para Painéis (EasyPanel / Coolify / Portainer)
-# Este arquivo é otimizado para Deploys em Nuvem onde o Painel gerencia a rede e o SSL.
-
 services:
   nginx:
     build:
@@ -8,10 +5,10 @@ services:
       dockerfile: docker/production/nginx/Dockerfile
     container_name: alvras-nginx-prod
     restart: unless-stopped
-    # Em painéis, você pode mapear a porta 80 ou deixar o painel gerenciar o Proxy.
     ports:
       - "80:80"
     volumes:
+      - .:/var/www/html
       - alvras-storage-production:/var/www/html/storage:ro
     depends_on:
       - app
@@ -30,9 +27,10 @@ services:
       DB_HOST: pgsql
       REDIS_HOST: redis
       AWS_ENDPOINT: http://minio:9000
-      # Configure sua APP_URL real no painel ou no .env
-      AWS_URL: ${APP_URL}/alvras
+      # 👇 AGORA CORRETO
+      AWS_URL: ${AWS_URL}
     volumes:
+      - .:/var/www/html
       - alvras-storage-production:/var/www/html/storage
     depends_on:
       - pgsql
@@ -52,8 +50,9 @@ services:
       DB_HOST: pgsql
       REDIS_HOST: redis
       AWS_ENDPOINT: http://minio:9000
-      AWS_URL: ${APP_URL}/alvras
+      AWS_URL: ${AWS_URL}
     volumes:
+      - .:/var/www/html
       - alvras-storage-production:/var/www/html/storage
     depends_on:
       - app
@@ -67,7 +66,6 @@ services:
       dockerfile: docker/production/php/Dockerfile
     container_name: alvras-scheduler-prod
     restart: unless-stopped
-    # Padrão Laravel 11/12 para Docker
     command: php artisan schedule:work --verbose --no-interaction
     env_file:
       - .env
@@ -75,8 +73,9 @@ services:
       DB_HOST: pgsql
       REDIS_HOST: redis
       AWS_ENDPOINT: http://minio:9000
-      AWS_URL: ${APP_URL}/alvras
+      AWS_URL: ${AWS_URL}
     volumes:
+      - .:/var/www/html
       - alvras-storage-production:/var/www/html/storage
     depends_on:
       - app
@@ -97,9 +96,9 @@ services:
     container_name: alvras-pgsql-prod
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_DATABASE:-alvras}
-      POSTGRES_USER: ${DB_USERNAME:-alvras_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secretpassword}
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - alvras-pgsql-data:/var/lib/postgresql/data
     networks:
@@ -111,9 +110,8 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-minio}
-      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-minio123}
-      # O painel cuidará do redirecionamento de URL se necessário
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
     volumes:
       - minio-data:/data
     ports:
@@ -127,7 +125,6 @@ networks:
     driver: bridge
 
 volumes:
-  # Aqui removemos o 'external: true' para que o Painel crie os volumes do zero no servidor novo
   alvras-pgsql-data:
   minio-data:
   redis-data-production:

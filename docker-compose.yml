@@ -8,7 +8,6 @@ services:
     ports:
       - "80:80"
     volumes:
-      - .:/var/www/html
       - alvras-storage-production:/var/www/html/storage:ro
     depends_on:
       - app
@@ -27,10 +26,8 @@ services:
       DB_HOST: pgsql
       REDIS_HOST: redis
       AWS_ENDPOINT: http://minio:9000
-      # 👇 AGORA CORRETO
       AWS_URL: ${AWS_URL}
     volumes:
-      - .:/var/www/html
       - alvras-storage-production:/var/www/html/storage
     depends_on:
       - pgsql
@@ -52,7 +49,6 @@ services:
       AWS_ENDPOINT: http://minio:9000
       AWS_URL: ${AWS_URL}
     volumes:
-      - .:/var/www/html
       - alvras-storage-production:/var/www/html/storage
     depends_on:
       - app
@@ -75,7 +71,6 @@ services:
       AWS_ENDPOINT: http://minio:9000
       AWS_URL: ${AWS_URL}
     volumes:
-      - .:/var/www/html
       - alvras-storage-production:/var/www/html/storage
     depends_on:
       - app

@@ -36,6 +36,9 @@ WORKDIR /var/www/html
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
+# 🔥 AJUSTE DE UID (RESOLVE PERMISSÃO)
+RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
+
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -76,7 +79,7 @@ COPY . .
 COPY --from=composer_deps /app/vendor ./vendor
 COPY --from=frontend_assets /app/public/build ./public/build
 
-# Permissões Laravel
+# 🔥 PERMISSÕES LARAVEL (AGORA FUNCIONA CERTO)
 RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache

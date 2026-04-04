@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   nginx:
     build:
@@ -11,10 +9,8 @@ services:
       - "80:80"
     volumes:
       - alvras-storage-production:/var/www/html/storage:ro
-      - .env:/var/www/html/.env:ro          # ← Monta o .env
     depends_on:
-      app:
-        condition: service_healthy
+      - app
     networks:
       - alvras-network
 
@@ -31,21 +27,10 @@ services:
       REDIS_HOST: redis
       AWS_ENDPOINT: http://minio:9000
       AWS_URL: ${AWS_URL}
-      APP_ENV: production
-      APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env:ro          # ← Monta o .env
     depends_on:
-      pgsql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "php", "-r", "echo 'OK';"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      - pgsql
     networks:
       - alvras-network
 
@@ -55,7 +40,7 @@ services:
       dockerfile: docker/production/php/Dockerfile
     container_name: alvras-worker-prod
     restart: unless-stopped
-    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600 --verbose
+    command: php artisan queue:work --sleep=3 --tries=3
     env_file:
       - .env
     environment:
@@ -63,16 +48,11 @@ services:
       REDIS_HOST: redis
       AWS_ENDPOINT: http://minio:9000
       AWS_URL: ${AWS_URL}
-      APP_ENV: production
-      APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env:ro
     depends_on:
-      app:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - app
+      - redis
     networks:
       - alvras-network
 
@@ -90,18 +70,13 @@ services:
       REDIS_HOST: redis
       AWS_ENDPOINT: http://minio:9000
       AWS_URL: ${AWS_URL}
-      APP_ENV: production
-      APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env:ro
     depends_on:
-      app:
-        condition: service_healthy
+      - app
     networks:
       - alvras-network
 
-  # (redis, pgsql e minio ficam iguais)
   redis:
     image: redis:alpine
     container_name: alvras-redis-prod

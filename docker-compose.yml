@@ -11,7 +11,7 @@ services:
       - "80:80"
     volumes:
       - alvras-storage-production:/var/www/html/storage:ro
-      - .env:/var/www/html/.env:ro
+      - .env:/var/www/html/.env:ro        # Nginx pode ficar somente leitura
     depends_on:
       app:
         condition: service_healthy
@@ -35,7 +35,7 @@ services:
       APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env:ro
+      - .env:/var/www/html/.env              # ← Sem :ro (permite escrita)
     depends_on:
       pgsql:
         condition: service_healthy
@@ -67,7 +67,7 @@ services:
       APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env:ro
+      - .env:/var/www/html/.env              # ← Sem :ro
     depends_on:
       app:
         condition: service_healthy
@@ -94,7 +94,7 @@ services:
       APP_DEBUG: "false"
     volumes:
       - alvras-storage-production:/var/www/html/storage
-      - .env:/var/www/html/.env:ro
+      - .env:/var/www/html/.env              # ← Sem :ro
     depends_on:
       app:
         condition: service_healthy
